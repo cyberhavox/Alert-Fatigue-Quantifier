@@ -5,7 +5,6 @@ of a single SOC analyst, complete with custom CSS styling and signal deltas.
 """
 
 import streamlit as st
-import textwrap
 
 
 def render_analyst_card(
@@ -92,4 +91,5 @@ def render_analyst_card(
         </div>
     </div>
     """
-    st.markdown(textwrap.dedent(card_html), unsafe_allow_html=True)
+    clean_html = "".join([line.strip() for line in card_html.split("\n")])
+    st.markdown(clean_html, unsafe_allow_html=True)

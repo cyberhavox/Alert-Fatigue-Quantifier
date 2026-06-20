@@ -5,7 +5,6 @@ warning triggers, and the mandatory persistent safety disclaimer.
 """
 
 import streamlit as st
-import textwrap
 
 
 def render_recommendation_panel(
@@ -42,22 +41,18 @@ def render_recommendation_panel(
     badge_cls = f"badge-{state.lower()}"
 
     # Render recommendations details
-    st.markdown(
-        textwrap.dedent(
-            f"""
-            <div class="recommendation-container">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border-subtle);">
-                    <span style="font-weight: 600; font-size: 13px; color: var(--text-primary);">{analyst_id}</span>
-                    <span class="badge {badge_cls}">AFI {afi_score:.0f}</span>
-                </div>
-                
-                <p style="font-weight: 500; font-size: 13px; color: {state_color}; margin-bottom: 12px;">
-                    {primary_rec}
-                </p>
-            """
-        ),
-        unsafe_allow_html=True
-    )
+    rec_html = f"""
+    <div class="recommendation-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border-subtle);">
+            <span style="font-weight: 600; font-size: 13px; color: var(--text-primary);">{analyst_id}</span>
+            <span class="badge {badge_cls}">AFI {afi_score:.0f}</span>
+        </div>
+        <p style="font-weight: 500; font-size: 13px; color: {state_color}; margin-bottom: 12px;">
+            {primary_rec}
+        </p>
+    """
+    clean_rec_html = "".join([line.strip() for line in rec_html.split("\n")])
+    st.markdown(clean_rec_html, unsafe_allow_html=True)
 
     # 1. Action Items List
     st.markdown('<p style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 6px; letter-spacing: 0.5px;">Advisory Actions</p>', unsafe_allow_html=True)
@@ -90,14 +85,11 @@ def render_recommendation_panel(
         st.markdown('<p style="font-size: 11px; color: var(--text-secondary); font-style: italic;">No statistical or predictive alarms triggered.</p>', unsafe_allow_html=True)
 
     # 3. Persistent Disclaimer
-    st.markdown(
-        textwrap.dedent(
-            f"""
-            <div class="disclaimer-text">
-                {disclaimer}
-            </div>
-            </div>
-            """
-        ),
-        unsafe_allow_html=True
-    )
+    disc_html = f"""
+    <div class="disclaimer-text">
+        {disclaimer}
+    </div>
+    </div>
+    """
+    clean_disc_html = "".join([line.strip() for line in disc_html.split("\n")])
+    st.markdown(clean_disc_html, unsafe_allow_html=True)
