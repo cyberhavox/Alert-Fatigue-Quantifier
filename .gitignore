@@ -7,6 +7,7 @@ data/baseline/*
 !data/baseline/.gitkeep
 data/output/*
 !data/output/.gitkeep
+data/models/*
 
 # Python Compilation and Caching
 __pycache__/

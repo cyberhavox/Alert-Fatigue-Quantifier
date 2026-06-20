@@ -1,0 +1,163 @@
+/* Import Fonts */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* CSS Variables */
+:root {
+  /* Backgrounds */
+  --bg-primary:    #0D1117;   /* Page background — near-black, GitHub-dark register */
+  --bg-surface:    #161B22;   /* Card / panel surface */
+  --bg-elevated:   #1C2128;   /* Hover states, selected rows */
+  --bg-input:      #21262D;   /* Input fields, dropdowns */
+
+  /* Borders */
+  --border-subtle: #30363D;   /* Dividers, card outlines */
+  --border-active: #58A6FF;   /* Focused inputs, active tabs */
+
+  /* Text */
+  --text-primary:  #E6EDF3;   /* Main body copy */
+  --text-secondary:#8B949E;   /* Labels, metadata, timestamps */
+  --text-muted:    #484F58;   /* Placeholder, disabled */
+  --text-inverse:  #0D1117;   /* Text on coloured backgrounds */
+
+  /* AFI Severity Scale — maps directly to fatigue states */
+  --state-nominal:  #3FB950;  /* AFI: low fatigue — green */
+  --state-elevated: #D29922;  /* AFI: moderate fatigue — amber */
+  --state-high:     #F78166;  /* AFI: high fatigue — coral-red */
+  --state-critical: #FF4444;  /* AFI: critical fatigue — saturated red */
+
+  /* Accent */
+  --accent-primary: #58A6FF;  /* Interactive elements, links, active indicators */
+  --accent-dim:     #1F4A7A;  /* Accent backgrounds, badges */
+}
+
+/* Global typography overrides */
+html, body, [class*="css"] {
+    font-family: 'Inter', sans-serif;
+    color: var(--text-primary);
+}
+
+/* Monospace fonts for numbers and timestamps */
+.monospace-val {
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* Analyst card layout styling */
+.analyst-card {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 16px;
+    margin-bottom: 16px;
+    transition: border-color 0.2s ease-in-out;
+}
+
+.analyst-card:hover {
+    background-color: var(--bg-elevated);
+}
+
+/* Dynamic severity borders */
+.card-nominal {
+    border: 1px solid var(--state-nominal);
+}
+.card-elevated {
+    border: 1px solid var(--state-elevated);
+}
+.card-high {
+    border: 1px solid var(--state-high);
+    animation: pulse-high 2s infinite alternate;
+}
+.card-critical {
+    border: 1px solid var(--state-critical);
+    animation: pulse-critical 1.5s infinite alternate;
+}
+
+/* Pulsing animations for high/critical states */
+@keyframes pulse-high {
+    0% {
+        box-shadow: 0 0 2px rgba(247, 129, 102, 0.2);
+    }
+    100% {
+        box-shadow: 0 0 8px rgba(247, 129, 102, 0.6);
+    }
+}
+
+@keyframes pulse-critical {
+    0% {
+        box-shadow: 0 0 2px rgba(255, 68, 68, 0.3);
+    }
+    100% {
+        box-shadow: 0 0 12px rgba(255, 68, 68, 0.8);
+    }
+}
+
+/* Title bar */
+.header-container {
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 20px;
+}
+
+.section-header {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-secondary);
+    margin-top: 10px;
+    margin-bottom: 15px;
+}
+
+/* Recommendations sidebar styling */
+.recommendation-container {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+    padding: 16px;
+}
+
+.disclaimer-text {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    color: var(--text-secondary);
+    border-top: 1px solid var(--border-subtle);
+    padding-top: 12px;
+    margin-top: 16px;
+    font-style: italic;
+}
+
+/* Custom styled badge */
+.badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge-nominal {
+    background-color: rgba(63, 185, 80, 0.15);
+    color: var(--state-nominal);
+    border: 1px solid var(--state-nominal);
+}
+
+.badge-elevated {
+    background-color: rgba(210, 153, 34, 0.15);
+    color: var(--state-elevated);
+    border: 1px solid var(--state-elevated);
+}
+
+.badge-high {
+    background-color: rgba(247, 129, 102, 0.15);
+    color: var(--state-high);
+    border: 1px solid var(--state-high);
+}
+
+.badge-critical {
+    background-color: rgba(255, 68, 68, 0.15);
+    color: var(--state-critical);
+    border: 1px solid var(--state-critical);
+}

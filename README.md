@@ -8,7 +8,7 @@
 * **Institution:** JAIN Online (Deemed-to-be University)
 * **Academic Program:** Master of Computer Applications (MCA)
 * **Semester / Elective:** Semester IV / Cyber Security Elective
-* **Sprint Status:** Week 5 of 8-Week Agile Implementation Plan
+* **Sprint Status:** Week 6 of 8-Week Agile Implementation Plan
 
 ---
 
@@ -181,14 +181,26 @@ Install dependencies listed in `requirements.txt`:
 pip install -r requirements.txt
 ```
 
+### Step 1: Generate Synthetic Data (Optional)
+To generate raw analyst log CSV files (mimicking SANS/Ponemon distributions):
+```bash
+python scripts/generate_synthetic_data.py
+```
+
+### Step 2: Run the E2E Processing Pipeline
+To run the ingestion, validate schemas, calculate rolling signals, calibrate baselines, perform Mann-Whitney U degradation tests, train the Random Forest predictive model, and output the data files:
+```bash
+python C:/Users/ragha/.gemini/antigravity-ide/brain/a9d1c431-a121-4fcd-9c92-131ab3a115ca/scratch/run_full_pipeline.py
+```
+
+### Step 3: Run the Dashboard
+To spin up the advisory dashboard locally:
+```bash
+streamlit run dashboard/app.py
+```
+
 ### Running Tests
 To run the automated test suite (implemented in Week 7):
 ```bash
 pytest tests/
-```
-
-### Running the Dashboard
-To spin up the advisory dashboard locally (implemented in Week 6):
-```bash
-streamlit run dashboard/app.py
 ```
