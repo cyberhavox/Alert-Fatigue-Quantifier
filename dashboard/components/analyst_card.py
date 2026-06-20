@@ -80,8 +80,8 @@ def render_analyst_card(
         </div>
         
         <!-- Custom Progress Bar -->
-        <div style="background-color: var(--bg-input); border-radius: 4px; height: 6px; width: 100%; margin-bottom: 16px; overflow: hidden;">
-            <div style="background-color: {state_color}; width: {afi_score}%; height: 100%;"></div>
+        <div class="progress-bar-container">
+            <div class="progress-bar-fill" style="background-color: {state_color}; width: {afi_score}%;"></div>
         </div>
         
         <!-- Signal Deltas -->
@@ -93,3 +93,4 @@ def render_analyst_card(
     """
     clean_html = "".join([line.strip() for line in card_html.split("\n")])
     st.markdown(clean_html, unsafe_allow_html=True)
+

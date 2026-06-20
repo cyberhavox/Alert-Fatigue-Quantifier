@@ -86,8 +86,8 @@ def main() -> None:
     st.markdown(
         """
         <div class="header-container">
-            <h2 style="margin: 0; padding: 0; color: var(--text-primary);">🛡️ Alert Fatigue Quantifier</h2>
-            <p style="margin: 4px 0 0 0; font-size: 13px; color: var(--text-secondary);">
+            <h2 class="header-title">🛡️ Alert Fatigue Quantifier</h2>
+            <p style="margin: 6px 0 0 0; font-size: 13px; color: var(--text-secondary); font-weight: 500;">
                 Cognitive Load & Operational Degradation Monitoring for SOC Analysts
             </p>
         </div>

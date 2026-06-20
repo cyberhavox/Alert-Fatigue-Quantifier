@@ -1,163 +1,218 @@
 /* Import Fonts */
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 /* CSS Variables */
 :root {
   /* Backgrounds */
-  --bg-primary:    #0D1117;   /* Page background — near-black, GitHub-dark register */
-  --bg-surface:    #161B22;   /* Card / panel surface */
-  --bg-elevated:   #1C2128;   /* Hover states, selected rows */
-  --bg-input:      #21262D;   /* Input fields, dropdowns */
+  --bg-primary:    #0B0E14;   /* Sleek, deep near-black page background */
+  --bg-surface:    #151922;   /* Glassmorphic card surface */
+  --bg-elevated:   #1D2330;   /* Selected elements, hover surfaces */
+  --bg-input:      #212838;   /* Input fields, dropdowns */
 
   /* Borders */
-  --border-subtle: #30363D;   /* Dividers, card outlines */
-  --border-active: #58A6FF;   /* Focused inputs, active tabs */
+  --border-subtle: rgba(255, 255, 255, 0.08); /* Minimalist divider */
+  --border-active: #58A6FF;   /* Active boundaries */
 
   /* Text */
-  --text-primary:  #E6EDF3;   /* Main body copy */
-  --text-secondary:#8B949E;   /* Labels, metadata, timestamps */
-  --text-muted:    #484F58;   /* Placeholder, disabled */
-  --text-inverse:  #0D1117;   /* Text on coloured backgrounds */
+  --text-primary:  #F0F6FC;   /* Premium high-contrast text */
+  --text-secondary:#8B95A5;   /* Secondary metadata/labels */
+  --text-muted:    #485264;   /* Disabled or placeholders */
 
-  /* AFI Severity Scale — maps directly to fatigue states */
-  --state-nominal:  #3FB950;  /* AFI: low fatigue — green */
-  --state-elevated: #D29922;  /* AFI: moderate fatigue — amber */
-  --state-high:     #F78166;  /* AFI: high fatigue — coral-red */
-  --state-critical: #FF4444;  /* AFI: critical fatigue — saturated red */
+  /* AFI Severity Scale — Custom harmonized HSL color-scheme */
+  --state-nominal:  #4ADE80;  /* Pastel green */
+  --state-elevated: #FBBF24;  /* Pastel amber */
+  --state-high:     #FB923C;  /* Pastel orange */
+  --state-critical: #F87171;  /* Pastel crimson */
 
   /* Accent */
-  --accent-primary: #58A6FF;  /* Interactive elements, links, active indicators */
-  --accent-dim:     #1F4A7A;  /* Accent backgrounds, badges */
+  --accent-primary: #58A6FF;  /* Interactive icons, primary buttons */
+  --accent-purple:  #A78BFA;  /* Circadian forecasting indicators */
 }
 
 /* Global typography overrides */
 html, body, [class*="css"] {
-    font-family: 'Inter', sans-serif;
-    color: var(--text-primary);
+    font-family: 'Inter', sans-serif !important;
+    background-color: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
 }
 
-/* Monospace fonts for numbers and timestamps */
+/* Monospace overrides for numbers and statistics */
 .monospace-val {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'JetBrains Mono', monospace !important;
+    letter-spacing: -1px;
 }
 
-/* Analyst card layout styling */
-.analyst-card {
-    background-color: var(--bg-surface);
-    border: 1px solid var(--border-subtle);
-    border-radius: 6px;
-    padding: 16px;
-    margin-bottom: 16px;
-    transition: border-color 0.2s ease-in-out;
+/* Base application gradient background */
+.stApp {
+    background-color: var(--bg-primary) !important;
+    background-image: 
+        radial-gradient(at 0% 0%, rgba(24, 119, 242, 0.05) 0, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.05) 0, transparent 50%) !important;
 }
 
-.analyst-card:hover {
-    background-color: var(--bg-elevated);
-}
-
-/* Dynamic severity borders */
-.card-nominal {
-    border: 1px solid var(--state-nominal);
-}
-.card-elevated {
-    border: 1px solid var(--state-elevated);
-}
-.card-high {
-    border: 1px solid var(--state-high);
-    animation: pulse-high 2s infinite alternate;
-}
-.card-critical {
-    border: 1px solid var(--state-critical);
-    animation: pulse-critical 1.5s infinite alternate;
-}
-
-/* Pulsing animations for high/critical states */
-@keyframes pulse-high {
-    0% {
-        box-shadow: 0 0 2px rgba(247, 129, 102, 0.2);
-    }
-    100% {
-        box-shadow: 0 0 8px rgba(247, 129, 102, 0.6);
-    }
-}
-
-@keyframes pulse-critical {
-    0% {
-        box-shadow: 0 0 2px rgba(255, 68, 68, 0.3);
-    }
-    100% {
-        box-shadow: 0 0 12px rgba(255, 68, 68, 0.8);
-    }
-}
-
-/* Title bar */
+/* Title Header styles */
 .header-container {
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--border-subtle);
-    margin-bottom: 20px;
+    padding: 16px 24px;
+    background: rgba(21, 25, 34, 0.4);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
+}
+
+.header-title {
+    background: linear-gradient(135deg, #58A6FF 0%, #A78BFA 50%, #FB923C 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800 !important;
+    font-size: 28px !important;
+    letter-spacing: -1px !important;
+    margin: 0;
 }
 
 .section-header {
     font-family: 'Inter', sans-serif;
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 13px;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
     color: var(--text-secondary);
-    margin-top: 10px;
-    margin-bottom: 15px;
+    margin-top: 18px;
+    margin-bottom: 14px;
+    padding-left: 4px;
+    border-left: 3px solid var(--accent-primary);
 }
 
-/* Recommendations sidebar styling */
-.recommendation-container {
-    background-color: var(--bg-surface);
+/* Glassmorphic Analyst Cards with hover translations and depth */
+.analyst-card {
+    background: rgba(21, 25, 34, 0.55);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     border: 1px solid var(--border-subtle);
-    border-radius: 6px;
-    padding: 16px;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.24);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.analyst-card:hover {
+    transform: translateY(-4px);
+    background: rgba(29, 35, 48, 0.8);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 15px rgba(88, 166, 255, 0.08);
+}
+
+/* Custom progress-bar wrapper with glowing overlay */
+.progress-bar-container {
+    background-color: var(--bg-input);
+    border-radius: 8px;
+    height: 8px;
+    width: 100%;
+    margin-bottom: 18px;
+    overflow: hidden;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.progress-bar-fill {
+    height: 100%;
+    border-radius: 8px;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Dynamic State highlights */
+.card-nominal {
+    border-left: 4px solid var(--state-nominal) !important;
+}
+.card-elevated {
+    border-left: 4px solid var(--state-elevated) !important;
+}
+.card-high {
+    border-left: 4px solid var(--state-high) !important;
+    animation: glow-high 2s infinite alternate;
+}
+.card-critical {
+    border-left: 4px solid var(--state-critical) !important;
+    animation: glow-critical 1.5s infinite alternate;
+}
+
+@keyframes glow-high {
+    0% { box-shadow: 0 8px 32px rgba(0, 0, 0, 0.24), 0 0 2px rgba(251, 146, 60, 0.1); }
+    100% { box-shadow: 0 8px 32px rgba(0, 0, 0, 0.24), 0 0 12px rgba(251, 146, 60, 0.3); }
+}
+
+@keyframes glow-critical {
+    0% { box-shadow: 0 8px 32px rgba(0, 0, 0, 0.24), 0 0 2px rgba(248, 113, 113, 0.15); }
+    100% { box-shadow: 0 8px 32px rgba(0, 0, 0, 0.24), 0 0 16px rgba(248, 113, 113, 0.45); }
+}
+
+/* Recommendations Panel container */
+.recommendation-container {
+    background: rgba(21, 25, 34, 0.55);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.24);
 }
 
 .disclaimer-text {
-    font-family: 'Inter', sans-serif;
     font-size: 11px;
     color: var(--text-secondary);
     border-top: 1px solid var(--border-subtle);
-    padding-top: 12px;
-    margin-top: 16px;
+    padding-top: 14px;
+    margin-top: 18px;
     font-style: italic;
+    line-height: 1.4;
 }
 
-/* Custom styled badge */
+/* Flat glass pills for badges */
 .badge {
-    display: inline-block;
-    padding: 2px 6px;
-    border-radius: 3px;
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 20px;
     font-size: 10px;
-    font-weight: 600;
+    font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .badge-nominal {
-    background-color: rgba(63, 185, 80, 0.15);
+    background-color: rgba(74, 222, 128, 0.08);
     color: var(--state-nominal);
-    border: 1px solid var(--state-nominal);
+    border: 1px solid rgba(74, 222, 128, 0.25);
 }
 
 .badge-elevated {
-    background-color: rgba(210, 153, 34, 0.15);
+    background-color: rgba(251, 191, 36, 0.08);
     color: var(--state-elevated);
-    border: 1px solid var(--state-elevated);
+    border: 1px solid rgba(251, 191, 36, 0.25);
 }
 
 .badge-high {
-    background-color: rgba(247, 129, 102, 0.15);
+    background-color: rgba(251, 146, 60, 0.08);
     color: var(--state-high);
-    border: 1px solid var(--state-high);
+    border: 1px solid rgba(251, 146, 60, 0.25);
 }
 
 .badge-critical {
-    background-color: rgba(255, 68, 68, 0.15);
+    background-color: rgba(248, 113, 113, 0.08);
     color: var(--state-critical);
-    border: 1px solid var(--state-critical);
+    border: 1px solid rgba(248, 113, 113, 0.25);
+}
+
+/* Custom rounded corners for all input, select and tab widgets in Streamlit */
+div[data-baseweb="select"], div[data-baseweb="input"], .stTabs [data-baseweb="tab-list"] {
+    background-color: var(--bg-surface) !important;
+    border-radius: 10px !important;
+}
+
+div[data-baseweb="select"]:hover, div[data-baseweb="input"]:hover {
+    border-color: var(--accent-primary) !important;
 }
