@@ -5,6 +5,7 @@ warning triggers, and the mandatory persistent safety disclaimer.
 """
 
 import streamlit as st
+import textwrap
 
 
 def render_recommendation_panel(
@@ -42,17 +43,19 @@ def render_recommendation_panel(
 
     # Render recommendations details
     st.markdown(
-        f"""
-        <div class="recommendation-container">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border-subtle);">
-                <span style="font-weight: 600; font-size: 13px; color: var(--text-primary);">{analyst_id}</span>
-                <span class="badge {badge_cls}">AFI {afi_score:.0f}</span>
-            </div>
-            
-            <p style="font-weight: 500; font-size: 13px; color: {state_color}; margin-bottom: 12px;">
-                {primary_rec}
-            </p>
-        """,
+        textwrap.dedent(
+            f"""
+            <div class="recommendation-container">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border-subtle);">
+                    <span style="font-weight: 600; font-size: 13px; color: var(--text-primary);">{analyst_id}</span>
+                    <span class="badge {badge_cls}">AFI {afi_score:.0f}</span>
+                </div>
+                
+                <p style="font-weight: 500; font-size: 13px; color: {state_color}; margin-bottom: 12px;">
+                    {primary_rec}
+                </p>
+            """
+        ),
         unsafe_allow_html=True
     )
 
@@ -88,11 +91,13 @@ def render_recommendation_panel(
 
     # 3. Persistent Disclaimer
     st.markdown(
-        f"""
+        textwrap.dedent(
+            f"""
             <div class="disclaimer-text">
                 {disclaimer}
             </div>
-        </div>
-        """,
+            </div>
+            """
+        ),
         unsafe_allow_html=True
     )
