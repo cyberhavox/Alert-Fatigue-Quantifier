@@ -190,7 +190,7 @@ python scripts/generate_synthetic_data.py
 ### Step 2: Run the E2E Processing Pipeline
 To run the ingestion, validate schemas, calculate rolling signals, calibrate baselines, perform Mann-Whitney U degradation tests, train the Random Forest predictive model, and output the data files:
 ```bash
-python C:/Users/ragha/.gemini/antigravity-ide/brain/a9d1c431-a121-4fcd-9c92-131ab3a115ca/scratch/run_full_pipeline.py
+python scripts/run_full_pipeline.py
 ```
 
 ### Step 3: Run the Dashboard
