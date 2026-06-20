@@ -1,0 +1,39 @@
+# Alert Fatigue Quantifier — Repository Exclusions
+
+# Data Directories (Preserve directory structure via .gitkeep, ignore generated logs)
+data/raw/*
+!data/raw/.gitkeep
+data/baseline/*
+!data/baseline/.gitkeep
+data/output/*
+!data/output/.gitkeep
+
+# Python Compilation and Caching
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+.cProfile/
+
+# Virtual Environments
+venv/
+.venv/
+env/
+.env/
+
+# Environment Configuration
+.env
+.env.local
+
+# Streamlit Configurations
+.streamlit/*
+!.streamlit/config.toml
+
+# IDE Settings
+.vscode/
+.idea/
+*.swp
+*.swo
