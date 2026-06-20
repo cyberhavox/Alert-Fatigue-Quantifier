@@ -9,7 +9,7 @@ import logging
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split, StratifiedKFold, cross_validate
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, make_scorer
 from sklearn.ensemble import RandomForestClassifier
 
 # Configure logging
@@ -79,7 +79,18 @@ def validate_model_performance(
 
     # 2. 5-Fold Stratified Cross-Validation
     cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-    scoring_metrics = ["accuracy", "precision", "recall", "f1"]
+    
+    # Configure custom scorers with zero_division=0.0 to prevent UndefinedMetricWarning
+    precision_scorer = make_scorer(precision_score, zero_division=0.0)
+    recall_scorer = make_scorer(recall_score, zero_division=0.0)
+    f1_scorer = make_scorer(f1_score, zero_division=0.0)
+    
+    scoring_metrics = {
+        "accuracy": "accuracy",
+        "precision": precision_scorer,
+        "recall": recall_scorer,
+        "f1": f1_scorer
+    }
     
     cv_model = RandomForestClassifier(
         n_estimators=model.n_estimators,
