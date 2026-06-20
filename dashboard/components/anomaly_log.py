@@ -51,7 +51,7 @@ def render_anomaly_log(anomalies_df: pd.DataFrame) -> None:
     
     st.dataframe(
         styled_df,
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
         column_config={
             "Timestamp": st.column_config.TextColumn(
