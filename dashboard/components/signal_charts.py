@@ -1,11 +1,10 @@
-"""Signal Trend Charts component formatted with Stripe Design Language.
+"""Signal Trend Charts component formatted with Stripi Design Language.
 
-Renders line charts using Matplotlib and Seaborn to display rolling window values,
-dashed historical baselines, and vertical anomaly indicators, matching Stripe aesthetics. Zero emojis.
+Renders line charts using Matplotlib to display rolling window values,
+dashed historical baselines, and vertical anomaly indicators. Zero emojis.
 """
 
 import matplotlib.pyplot as plt
-import seaborn as sns
 import pandas as pd
 import numpy as np
 import streamlit as st
@@ -17,14 +16,7 @@ def render_signal_charts(
     baseline: dict[str, float],
     anomalies_df: pd.DataFrame
 ) -> None:
-    """Renders the 5 signal trend charts for a single analyst over the last 8 hours.
-
-    Args:
-        analyst_id: Selected analyst to filter data for.
-        scored_df: Scored DataFrame containing rolling signal outputs and closure timestamps.
-        baseline: Baseline parameters dictionary for the analyst.
-        anomalies_df: Flagged anomalies DataFrame to draw vertical indicators.
-    """
+    """Renders the 5 signal trend charts for a single analyst over the last 8 hours."""
     analyst_data = scored_df[scored_df["analyst_id"] == analyst_id].copy()
     if analyst_data.empty:
         st.warning(f"No signal data available for {analyst_id}.")
@@ -91,13 +83,13 @@ def render_signal_charts(
     signal_names = [cfg["name"] for cfg in signals_config]
     tabs = st.tabs(signal_names)
 
-    # Stripe Palette
-    bg_surface = "#1a1f36"
-    border_subtle = "#2e384d"
-    chart_1 = "#635bff"        # Stripe Electric Indigo
-    text_secondary = "#adbdcc"  # Stripe Muted Text
-    state_high = "#ff5b60"      # Stripe Coral Red
-    text_primary = "#ffffff"    # Crisp White
+    # Sleek Dark Palette
+    bg_surface = "#141936"
+    border_subtle = "#1f264e"
+    chart_1 = "#665efd"        # Stripi Indigo
+    text_secondary = "#94a3b8"  # Slate Muted Text
+    state_high = "#f43f5e"      # Neon Coral Red
+    text_primary = "#f8fafc"    # Crisp Off-White
 
     for i, tab in enumerate(tabs):
         cfg = signals_config[i]
@@ -113,24 +105,30 @@ def render_signal_charts(
         with tab:
             st.caption(f"Parameter: {cfg['tooltip']}")
             
-            fig, ax = plt.subplots(figsize=(10, 3.5), facecolor=bg_surface)
+            fig, ax = plt.subplots(figsize=(10, 3.2), facecolor=bg_surface)
             ax.set_facecolor(bg_surface)
 
             x_vals = shift_data["closure_dt"]
             y_vals = shift_data[col_name]
             
+            # Subtle area fill
+            ax.fill_between(x_vals, y_vals, color=chart_1, alpha=0.1)
+
+            # Main signal line
             ax.plot(
                 x_vals, y_vals,
                 color=chart_1,
-                linewidth=2,
+                linewidth=2.2,
                 label=f"Rolling Window ({sig_name})"
             )
 
+            # Baseline horizontal line
             ax.axhline(
                 y=baseline_val,
                 color=text_secondary,
                 linestyle="--",
-                linewidth=1.5,
+                linewidth=1.2,
+                alpha=0.7,
                 label=f"30-day baseline ({baseline_val:.2f} {sig_unit})"
             )
 
@@ -150,14 +148,14 @@ def render_signal_charts(
                             matching_points["closure_dt"],
                             matching_points[col_name],
                             color=state_high,
-                            s=40,
+                            s=45,
                             zorder=5
                         )
 
             title_text = f"{sig_name} — {analyst_id} — Active Shift"
-            ax.set_title(title_text, color=text_primary, fontsize=11, fontweight="600", pad=12)
+            ax.set_title(title_text, color=text_primary, fontsize=10, fontweight="500", pad=10)
 
-            ax.tick_params(colors=text_secondary, labelsize=9)
+            ax.tick_params(colors=text_secondary, labelsize=8)
             ax.spines["top"].set_visible(False)
             ax.spines["right"].set_visible(False)
             ax.spines["left"].set_color(border_subtle)
@@ -165,17 +163,19 @@ def render_signal_charts(
             
             ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: pd.to_datetime(x).strftime("%H:%M")))
             
-            ax.set_ylabel(sig_unit, color=text_secondary, fontsize=9)
-            ax.grid(color=border_subtle, linestyle="-", linewidth=0.5, alpha=0.4)
+            ax.set_ylabel(sig_unit, color=text_secondary, fontsize=8)
+            ax.grid(color=border_subtle, linestyle="-", linewidth=0.5, alpha=0.5)
             
             legend = ax.legend(
                 loc="upper left",
                 facecolor=bg_surface,
                 edgecolor=border_subtle,
-                fontsize=8
+                fontsize=8,
+                framealpha=0.9
             )
             for text in legend.get_texts():
                 text.set_color(text_primary)
 
+            plt.tight_layout(pad=0.4)
             st.pyplot(fig)
             plt.close(fig)

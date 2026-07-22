@@ -1,154 +1,138 @@
 /* ============================================================
-   Stripi-inspired Design Language — Streamlit Dashboard Theme
-   Source: DESIGN.md (Stripi-design-analysis, version alpha)
-   Colors, Typography, Elevation, and Shapes from design spec.
+   Stripi-inspired Premium Design Language — Streamlit Dashboard Theme
+   High-end Dark Mode with Glassmorphism, Micro-Glow, and Modern Typography
    ============================================================ */
 
-/* ── Google Fonts: Inter (open-source Sohne substitute) ── */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
-/* ── Design Token Root ── */
 :root {
   /* Brand Palette */
-  --color-primary:            #533afd;   /* Indigo — CTA, link emphasis */
-  --color-primary-deep:       #4434d4;   /* Indigo Deep — gradient mid, press */
-  --color-primary-press:      #2e2b8c;   /* Indigo Press — pressed state */
-  --color-primary-soft:       #665efd;   /* Indigo Soft — chart accent */
-  --color-primary-subdued:    #b9b9f9;   /* Indigo Subdued — soft tag bg */
-  --color-brand-dark:         #1c1e54;   /* Brand Dark 900 — dashboard chrome */
-  --color-ruby:               #ea2261;   /* Ruby — anomaly critical */
-  --color-magenta:            #f96bee;   /* Magenta — gradient mesh stop */
+  --color-primary:            #533afd;   /* Stripi Indigo */
+  --color-primary-deep:       #4434d4;
+  --color-primary-press:      #2e2b8c;
+  --color-primary-soft:       #665efd;
+  --color-primary-subdued:    #b9b9f9;
+  --color-brand-dark:         #121638;   /* Deeper Navy */
+  --color-ruby:               #ea2261;
+  --color-magenta:            #f96bee;
 
-  /* Surface */
-  --color-canvas:             #ffffff;
-  --color-canvas-soft:        #f6f9fc;
-  --color-canvas-cream:       #f5e9d4;
-  --color-hairline:           #e3e8ee;
-  --color-hairline-input:     #a8c3de;
+  /* Surfaces & Dark Glass */
+  --bg-primary:               #090d1a;   /* Rich Ultra-Dark Ink */
+  --bg-surface:               rgba(22, 27, 60, 0.75); /* Glass card */
+  --bg-surface-solid:         #141936;
+  --bg-elevated:              #1f264e;
+  --bg-input:                 #141936;
 
-  /* Text */
-  --color-ink:                #0d253d;
-  --color-ink-secondary:      #273951;
-  --color-ink-mute:           #64748d;
-  --color-on-primary:         #ffffff;
+  /* Hairlines & Borders */
+  --border-subtle:            rgba(255, 255, 255, 0.08);
+  --border-strong:            rgba(255, 255, 255, 0.16);
+  --border-active:            #665efd;
 
-  /* Dashboard Dark Surface Overrides */
-  --bg-primary:               #0d1929;   /* Deepest shell — richer than brand ink */
-  --bg-surface:               #1c1e54;   /* Card surface = brand-dark-900 */
-  --bg-elevated:              #242b5e;   /* Hover elevated */
-  --bg-input:                 #1c1e54;
+  /* Text Colors */
+  --text-primary:             #f8fafc;
+  --text-secondary:           #94a3b8;
+  --text-muted:               #64748b;
 
-  /* Borders */
-  --border-subtle:            #2a3060;
-  --border-strong:            #3b4080;
-  --border-active:            #533afd;
-
-  /* Text (Dark Mode) */
-  --text-primary:             #f6f9fc;   /* canvas-soft — crisp on dark */
-  --text-secondary:           #a8c3de;   /* hairline-input — Stripe muted */
-  --text-muted:               #64748d;   /* ink-mute */
-
-  /* Severity Scale */
-  --state-nominal:            #00c896;   /* Teal-green */
+  /* Severity Scale (Vibrant Neon Soft) */
+  --state-nominal:            #10b981;   /* Emerald */
   --state-elevated:           #f59e0b;   /* Amber */
-  --state-high:               #f87171;   /* Coral red */
-  --state-critical:           #ea2261;   /* Ruby */
+  --state-high:               #f43f5e;   /* Coral Red */
+  --state-critical:           #f43f5e;   /* Ruby Red */
 
-  /* Radius */
+  /* Border Radii */
   --radius-xs:                4px;
   --radius-sm:                6px;
-  --radius-md:                8px;
-  --radius-lg:                12px;
-  --radius-xl:                16px;
+  --radius-md:                10px;
+  --radius-lg:                14px;
+  --radius-xl:                20px;
   --radius-pill:              9999px;
 
-  /* Elevation Shadows (per DESIGN.md spec) */
-  --shadow-1:   rgba(0, 55, 112, 0.08) 0 1px 3px;
-  --shadow-2:   rgba(0, 55, 112, 0.08) 0 8px 24px, rgba(0, 55, 112, 0.04) 0 2px 6px;
+  /* Elevation & Shadows */
+  --shadow-card:              0 4px 20px rgba(0, 0, 0, 0.35);
+  --shadow-hover:             0 12px 32px rgba(83, 58, 253, 0.25);
+  --shadow-glow-nominal:      0 0 16px rgba(16, 185, 129, 0.25);
+  --shadow-glow-critical:     0 0 16px rgba(244, 63, 94, 0.3);
 }
 
-/* ── Global Reset & Typography ── */
+/* ── Reset & Typography ── */
 html, body, [class*="css"] {
-  font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif !important;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
   font-weight: 300 !important;
   background-color: var(--bg-primary) !important;
   color: var(--text-primary) !important;
-  /* ss01 stylistic set: single-story 'a' — Stripi signature */
-  font-feature-settings: "ss01" 1 !important;
+  font-feature-settings: "ss01" 1, "cv05" 1 !important;
 }
 
-/* ── App Shell with Gradient Mesh (upper-third atmospheric) ── */
+/* ── App Shell Radial Backdrop ── */
 .stApp {
   background-color: var(--bg-primary) !important;
   background-image:
-    radial-gradient(ellipse 80% 50% at 20% 0%, rgba(83, 58, 253, 0.18) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 40% at 80% 0%, rgba(249, 107, 238, 0.10) 0%, transparent 55%),
-    radial-gradient(ellipse 50% 30% at 50% 0%, rgba(234, 34, 97, 0.08) 0%, transparent 45%) !important;
+    radial-gradient(ellipse 90% 60% at 15% 0%, rgba(83, 58, 253, 0.22) 0%, transparent 65%),
+    radial-gradient(ellipse 70% 50% at 85% 0%, rgba(249, 107, 238, 0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(16, 185, 129, 0.05) 0%, transparent 50%) !important;
   background-attachment: fixed !important;
 }
 
-/* ── Monospace (tabular figures — Stripi tnum signature) ── */
+/* ── Monospace Tabular Figures ── */
 .mono, code, pre, .monospace-val {
-  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace !important;
+  font-family: 'JetBrains Mono', monospace !important;
   font-feature-settings: "tnum" 1 !important;
-  letter-spacing: -0.42px;
-  font-weight: 400 !important;
+  letter-spacing: -0.5px;
 }
 
 /* ══════════════════════════════════════════════
-   HEADER
+   HEADER BAR
 ══════════════════════════════════════════════ */
 .afq-header {
-  padding: 28px 32px 24px;
-  background: linear-gradient(135deg, var(--color-brand-dark) 0%, #14165e 100%);
-  border: 1px solid var(--border-subtle);
+  padding: 24px 30px;
+  background: rgba(18, 22, 56, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-xl);
-  margin-bottom: 28px;
-  box-shadow: var(--shadow-2);
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-card);
   position: relative;
   overflow: hidden;
 }
 
-/* Subtle decorative mesh overlay inside header */
-.afq-header::before {
+/* Glowing top accent line */
+.afq-header::after {
   content: '';
   position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: radial-gradient(ellipse 70% 120% at 90% -20%, rgba(83, 58, 253, 0.25) 0%, transparent 60%);
-  pointer-events: none;
+  top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, #533afd 0%, #f96bee 50%, #10b981 100%);
 }
 
 .afq-header-title {
-  font-size: 28px !important;
-  font-weight: 300 !important;
-  letter-spacing: -0.64px !important;
+  font-size: 26px !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.8px !important;
   color: #ffffff !important;
-  margin: 0 0 6px 0 !important;
+  margin: 0 0 4px 0 !important;
   line-height: 1.1 !important;
 }
 
 .afq-header-subtitle {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 300;
   color: var(--text-secondary);
   margin: 0;
-  line-height: 1.5;
-  letter-spacing: 0;
+  line-height: 1.4;
 }
 
 .afq-header-live {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 11px;
-  font-weight: 500;
+  font-size: 10px;
+  font-weight: 600;
   color: var(--state-nominal);
-  background: rgba(0, 200, 150, 0.12);
-  border: 1px solid rgba(0, 200, 150, 0.25);
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
   border-radius: var(--radius-pill);
   padding: 4px 10px;
-  font-family: 'Inter', sans-serif;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.8px;
 }
 
 .afq-header-live::before {
@@ -156,49 +140,53 @@ html, body, [class*="css"] {
   width: 6px; height: 6px;
   background: var(--state-nominal);
   border-radius: 50%;
+  box-shadow: 0 0 8px var(--state-nominal);
   animation: pulse-dot 2s ease-in-out infinite;
 }
 
 @keyframes pulse-dot {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.35; }
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
 }
 
 /* ══════════════════════════════════════════════
-   SECTION HEADERS
+   SECTION LABELS
 ══════════════════════════════════════════════ */
 .section-label {
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 1.2px;
-  color: var(--text-muted);
-  margin: 28px 0 14px 0;
+  letter-spacing: 1.5px;
+  color: var(--text-secondary);
+  margin: 24px 0 14px 0;
   padding-left: 10px;
-  border-left: 2px solid var(--color-primary-soft);
+  border-left: 3px solid var(--color-primary-soft);
   display: block;
 }
 
 /* ══════════════════════════════════════════════
-   ANALYST CARDS — Stripi card-dashboard-mockup
+   ANALYST CARDS (Glassmorphism + Subtle Glow)
 ══════════════════════════════════════════════ */
 .analyst-card {
-  background: var(--bg-surface);
+  background: rgba(20, 25, 54, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   padding: 20px;
   margin-bottom: 14px;
-  box-shadow: var(--shadow-1);
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  box-shadow: var(--shadow-card);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
+  overflow: hidden;
 }
 
 .analyst-card:hover {
-  box-shadow: var(--shadow-2);
+  transform: translateY(-2px);
   border-color: var(--border-strong);
+  box-shadow: var(--shadow-hover);
 }
 
-/* Left-edge severity accent */
 .card-nominal  { border-left: 3px solid var(--state-nominal)  !important; }
 .card-elevated { border-left: 3px solid var(--state-elevated) !important; }
 .card-high     { border-left: 3px solid var(--state-high)     !important; }
@@ -206,141 +194,75 @@ html, body, [class*="css"] {
 
 /* Progress bar */
 .afq-progress-track {
-  background: rgba(255,255,255,0.06);
-  border-radius: var(--radius-xs);
-  height: 5px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: var(--radius-pill);
+  height: 6px;
   width: 100%;
-  margin: 10px 0 12px;
+  margin: 12px 0 14px;
   overflow: hidden;
 }
+
 .afq-progress-fill {
   height: 100%;
-  border-radius: var(--radius-xs);
-  transition: width 0.4s ease;
+  border-radius: var(--radius-pill);
+  transition: width 0.5s ease-out;
 }
 
 /* ══════════════════════════════════════════════
-   BADGES — Stripi pill-tag-soft style
+   BADGES (Pill Soft Neon)
 ══════════════════════════════════════════════ */
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 3px 9px;
+  padding: 3px 10px;
   border-radius: var(--radius-pill);
   font-size: 10px;
-  font-weight: 500;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
+  letter-spacing: 0.8px;
   font-family: 'Inter', sans-serif;
 }
 
-.badge-nominal   { background: rgba(0,200,150,0.12);  color: var(--state-nominal);   border: 1px solid rgba(0,200,150,0.25);  }
-.badge-elevated  { background: rgba(245,158,11,0.12);  color: var(--state-elevated);  border: 1px solid rgba(245,158,11,0.25); }
-.badge-high      { background: rgba(248,113,113,0.12); color: var(--state-high);      border: 1px solid rgba(248,113,113,0.25);}
-.badge-critical  { background: rgba(234,34,97,0.12);   color: var(--state-critical);  border: 1px solid rgba(234,34,97,0.25);  }
+.badge-nominal   { background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+.badge-elevated  { background: rgba(245, 158, 11, 0.12); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+.badge-high      { background: rgba(244, 63, 94, 0.12);  color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.3); }
+.badge-critical  { background: rgba(244, 63, 94, 0.16);  color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.4); }
 
 /* ══════════════════════════════════════════════
    RECOMMENDATION PANEL
 ══════════════════════════════════════════════ */
 .recommendation-container {
-  background: var(--bg-surface);
+  background: rgba(20, 25, 54, 0.8);
+  backdrop-filter: blur(12px);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   padding: 20px;
-  box-shadow: var(--shadow-1);
-}
-
-.disclaimer-text {
-  font-size: 11px;
-  color: var(--text-muted);
-  border-top: 1px solid var(--border-subtle);
-  padding-top: 12px;
-  margin-top: 16px;
-  line-height: 1.5;
+  box-shadow: var(--shadow-card);
 }
 
 /* ══════════════════════════════════════════════
-   ANOMALY TABLE — clean tabular display
+   TABLE & CONTAINER WRAPPERS
 ══════════════════════════════════════════════ */
-.anomaly-table-wrap {
-  background: var(--bg-surface);
+.anomaly-table-wrap, .forecast-wrap {
+  background: rgba(20, 25, 54, 0.8);
+  backdrop-filter: blur(12px);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  box-shadow: var(--shadow-1);
+  box-shadow: var(--shadow-card);
   margin-bottom: 20px;
 }
 
-.anomaly-table-header {
-  display: grid;
-  grid-template-columns: 160px 110px 1fr 120px 100px 100px;
-  background: rgba(255,255,255,0.04);
-  border-bottom: 1px solid var(--border-subtle);
-  padding: 10px 16px;
-  gap: 8px;
-}
-
-.anomaly-table-header span {
-  font-size: 10px;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: var(--text-muted);
-}
-
-.anomaly-row {
-  display: grid;
-  grid-template-columns: 160px 110px 1fr 120px 100px 100px;
-  padding: 10px 16px;
-  gap: 8px;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
-  transition: background 0.15s;
-  align-items: center;
-}
-
-.anomaly-row:last-child { border-bottom: none; }
-.anomaly-row:hover { background: rgba(255,255,255,0.03); }
-
-.anomaly-row span {
-  font-size: 12px;
-  font-family: 'JetBrains Mono', monospace;
-  color: var(--text-secondary);
-  font-feature-settings: "tnum" 1;
-}
-
-.anomaly-row .signal-name {
-  font-family: 'Inter', sans-serif;
-  color: var(--text-primary);
-  font-size: 12px;
-  font-weight: 400;
-}
-
-.anomaly-empty {
-  padding: 32px 20px;
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 13px;
-  font-weight: 300;
-}
-
-/* ══════════════════════════════════════════════
-   FORECAST PANEL — risk metric + chart area
-══════════════════════════════════════════════ */
 .forecast-wrap {
-  background: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
   padding: 24px;
-  box-shadow: var(--shadow-1);
-  margin-bottom: 20px;
 }
 
 .forecast-metric-row {
   display: flex;
   align-items: flex-end;
-  gap: 20px;
+  gap: 24px;
   margin-bottom: 20px;
-  padding-bottom: 16px;
+  padding-bottom: 18px;
   border-bottom: 1px solid var(--border-subtle);
 }
 
@@ -352,23 +274,23 @@ html, body, [class*="css"] {
 
 .forecast-metric-label {
   font-size: 10px;
-  font-weight: 500;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.8px;
   color: var(--text-muted);
 }
 
 .forecast-metric-value {
-  font-size: 40px;
+  font-size: 42px;
   font-weight: 300;
-  letter-spacing: -1px;
+  letter-spacing: -1.2px;
   line-height: 1;
   font-feature-settings: "tnum" 1;
 }
 
 .forecast-alert-box {
   flex: 1;
-  padding: 12px 16px;
+  padding: 14px 18px;
   border-radius: var(--radius-md);
   font-size: 13px;
   font-weight: 300;
@@ -376,58 +298,39 @@ html, body, [class*="css"] {
 }
 
 /* ══════════════════════════════════════════════
-   STREAMLIT WIDGET OVERRIDES
+   STREAMLIT WIDGET STYLING
 ══════════════════════════════════════════════ */
-/* Sidebar */
-section[data-testid="stSidebar"] {
-  background-color: var(--bg-surface) !important;
-  border-right: 1px solid var(--border-subtle) !important;
-}
-
-/* Multiselect & Selectbox */
+/* Selectbox / Multiselect */
 div[data-baseweb="select"] > div {
-  background-color: var(--bg-elevated) !important;
-  border: 1px solid var(--border-subtle) !important;
+  background-color: rgba(20, 25, 54, 0.9) !important;
+  border: 1px solid var(--border-strong) !important;
   border-radius: var(--radius-sm) !important;
   color: var(--text-primary) !important;
-}
-div[data-baseweb="select"]:focus-within > div {
-  border-color: var(--color-primary) !important;
 }
 
 /* Tabs */
 .stTabs [data-baseweb="tab-list"] {
   background-color: transparent !important;
   border-bottom: 1px solid var(--border-subtle) !important;
-  gap: 4px;
+  gap: 6px;
 }
+
 .stTabs [data-baseweb="tab"] {
-  color: var(--text-muted) !important;
+  color: var(--text-secondary) !important;
   font-size: 13px !important;
   font-weight: 400 !important;
   border-radius: var(--radius-sm) var(--radius-sm) 0 0 !important;
+  padding: 8px 16px !important;
 }
+
 .stTabs [aria-selected="true"] {
-  color: var(--color-primary-soft) !important;
+  color: #ffffff !important;
+  font-weight: 500 !important;
   border-bottom: 2px solid var(--color-primary-soft) !important;
-  background: rgba(83, 58, 253, 0.08) !important;
+  background: rgba(83, 58, 253, 0.15) !important;
 }
 
-/* Metric widget */
-[data-testid="metric-container"] {
-  background: rgba(255,255,255,0.04) !important;
-  border: 1px solid var(--border-subtle) !important;
-  border-radius: var(--radius-md) !important;
-  padding: 14px 16px !important;
-}
-
-/* Checkbox */
-[data-testid="stCheckbox"] label {
-  color: var(--text-secondary) !important;
-  font-size: 13px !important;
-}
-
-/* Dataframe scrollbar tint */
+/* Scrollbars */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 3px; }
