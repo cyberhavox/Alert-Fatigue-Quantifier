@@ -1,7 +1,7 @@
-"""Signal Trend Charts component formatted with Splunk ES / Cortex XSOAR Design Language.
+"""Signal Trend Charts component formatted for high contrast Slate theme.
 
-Renders high-density time-series line charts using Matplotlib with neon cyan accents,
-dashed baseline, and crimson red anomaly flags. Zero emojis.
+Renders line charts using Matplotlib to display rolling window values,
+dashed historical baselines, and vertical anomaly indicators. Zero emojis.
 """
 
 from __future__ import annotations
@@ -87,14 +87,13 @@ def render_signal_charts(
     signal_names = [cfg["name"] for cfg in signals_config]
     tabs = st.tabs(signal_names)
 
-    # Splunk Dark Theme Palette
-    bg_surface = "#0f1422"
-    border_subtle = "#1a2338"
-    chart_cyan = "#00f2fe"       # Neon Cyber Cyan
-    chart_indigo = "#6366f1"     # Electric Indigo
-    text_secondary = "#94a3b8"   # Slate Text
-    state_critical = "#ff0055"   # Crimson Anomaly Flag
-    text_primary = "#f1f5f9"     # Crisp White
+    # High Contrast Slate Theme Palette
+    bg_surface = "#1e293b"       # Slate 800 Card Fill
+    border_subtle = "#334155"    # Slate 700 Gridline
+    chart_cyan = "#0ea5e9"       # Bright Sky Blue Line
+    text_secondary = "#cbd5e1"   # Slate 300 Text
+    state_critical = "#ef4444"   # Bright Red Anomaly Flag
+    text_primary = "#f8fafc"     # Crisp White
 
     for i, tab in enumerate(tabs):
         cfg = signals_config[i]
@@ -116,24 +115,24 @@ def render_signal_charts(
             x_vals = shift_data["closure_dt"]
             y_vals = shift_data[col_name]
             
-            # Area fill under signal line
-            ax.fill_between(x_vals, y_vals, color=chart_cyan, alpha=0.08)
+            # Subtle area fill
+            ax.fill_between(x_vals, y_vals, color=chart_cyan, alpha=0.12)
 
-            # Signal telemetry plot
+            # Main signal line
             ax.plot(
                 x_vals, y_vals,
                 color=chart_cyan,
-                linewidth=2.0,
+                linewidth=2.2,
                 label=f"Rolling Window ({sig_name})"
             )
 
-            # Baseline marker
+            # Baseline line
             ax.axhline(
                 y=baseline_val,
                 color=text_secondary,
                 linestyle="--",
                 linewidth=1.2,
-                alpha=0.7,
+                alpha=0.8,
                 label=f"30-Day Baseline ({baseline_val:.2f} {sig_unit})"
             )
 
@@ -146,7 +145,7 @@ def render_signal_charts(
                         color=state_critical,
                         linestyle=":",
                         linewidth=1.5,
-                        alpha=0.85
+                        alpha=0.9
                     )
                     matching_points = shift_data[shift_data["closure_dt"] == anom["closure_dt"]]
                     if not matching_points.empty:
@@ -154,14 +153,14 @@ def render_signal_charts(
                             matching_points["closure_dt"],
                             matching_points[col_name],
                             color=state_critical,
-                            s=50,
+                            s=55,
                             zorder=5
                         )
 
-            title_text = f"SIEM Telemetry: {sig_name} — Node: {analyst_id} — Active Shift"
-            ax.set_title(title_text, color=text_primary, fontsize=10, fontweight="bold", pad=10)
+            title_text = f"Telemetry Signal: {sig_name} — Analyst Node: {analyst_id}"
+            ax.set_title(title_text, color=text_primary, fontsize=11, fontweight="bold", pad=10)
 
-            ax.tick_params(colors=text_secondary, labelsize=8)
+            ax.tick_params(colors=text_secondary, labelsize=9)
             ax.spines["top"].set_visible(False)
             ax.spines["right"].set_visible(False)
             ax.spines["left"].set_color(border_subtle)
@@ -170,15 +169,15 @@ def render_signal_charts(
             ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
             ax.xaxis.set_major_locator(mdates.AutoDateLocator())
             
-            ax.set_ylabel(sig_unit, color=text_secondary, fontsize=8)
-            ax.grid(color=border_subtle, linestyle="-", linewidth=0.5, alpha=0.5)
+            ax.set_ylabel(sig_unit, color=text_secondary, fontsize=9)
+            ax.grid(color=border_subtle, linestyle="-", linewidth=0.6, alpha=0.6)
             
             legend = ax.legend(
                 loc="upper left",
                 facecolor=bg_surface,
                 edgecolor=border_subtle,
-                fontsize=8,
-                framealpha=0.95
+                fontsize=8.5,
+                framealpha=1.0
             )
             for text in legend.get_texts():
                 text.set_color(text_primary)

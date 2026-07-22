@@ -1,6 +1,6 @@
-"""Degradation Anomaly Audit Log component — Stripi Design Language.
+"""Degradation Anomaly Audit Log component.
 
-Renders a custom HTML table with per-row severity highlighting
+Renders a high-contrast HTML table with per-row severity highlighting
 and tabular-figure monospace numerics. Zero emojis.
 """
 
@@ -9,37 +9,37 @@ import pandas as pd
 import streamlit as st
 
 _STATE_STYLES: dict[str, tuple[str, str, str]] = {
-    "CRITICAL": ("#ea2261", "rgba(234, 34, 97, 0.12)",  "rgba(234, 34, 97, 0.30)"),
-    "HIGH":     ("#f87171", "rgba(248, 113, 113, 0.10)", "rgba(248, 113, 113, 0.25)"),
-    "ELEVATED": ("#f59e0b", "rgba(245, 158, 11, 0.10)",  "rgba(245, 158, 11, 0.25)"),
-    "NOMINAL":  ("#00c896", "rgba(0, 200, 150, 0.08)",   "rgba(0, 200, 150, 0.20)"),
+    "CRITICAL": ("#ef4444", "rgba(239, 68, 68, 0.15)",  "#ef4444"),
+    "HIGH":     ("#ef4444", "rgba(239, 68, 68, 0.10)",  "#ef4444"),
+    "ELEVATED": ("#f59e0b", "rgba(245, 158, 11, 0.10)",  "#f59e0b"),
+    "NOMINAL":  ("#10b981", "rgba(16, 185, 129, 0.10)",  "#10b981"),
 }
 
 _COLUMNS = ["Timestamp", "Analyst", "Signal", "Deviation", "p-value", "State"]
 
 
 def _clean_html(raw_html: str) -> str:
-    """Strips multiline indentation to prevent Streamlit from rendering raw HTML as markdown code blocks."""
+    """Strips multiline indentation to prevent Streamlit raw codeblock rendering bug."""
     return "".join([line.strip() for line in raw_html.split("\n")])
 
 
 def _state_badge(state: str) -> str:
-    color, bg, border = _STATE_STYLES.get(state, ("#adbdcc", "rgba(173,189,204,0.1)", "rgba(173,189,204,0.2)"))
+    color, bg, border = _STATE_STYLES.get(state, ("#cbd5e1", "rgba(203,213,225,0.1)", "#cbd5e1"))
     return (
-        f'<span style="display:inline-block; padding:2px 8px; border-radius:9999px; '
-        f'font-size:10px; font-weight:500; letter-spacing:0.5px; text-transform:uppercase; '
-        f'font-family:\'Inter\',sans-serif; background:{bg}; color:{color}; border:1px solid {border};">'
+        f'<span style="display:inline-block; padding:3px 10px; border-radius:4px; '
+        f'font-size:11px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; '
+        f'font-family:\'JetBrains Mono\',monospace; background:{bg}; color:{color}; border:1px solid {border};">'
         f"{state}</span>"
     )
 
 
 def render_anomaly_log(anomalies_df: pd.DataFrame) -> None:
-    """Renders the degradation anomaly audit log as a styled HTML table."""
+    """Renders the degradation anomaly audit log as a high-contrast table."""
     if anomalies_df.empty:
         html = _clean_html("""
             <div class="anomaly-table-wrap">
-              <div class="anomaly-empty">
-                No operational degradation anomalies in the active monitoring window.
+              <div style="padding:28px 20px; text-align:center; color:var(--text-muted); font-size:13px;">
+                No operational degradation anomalies detected in active monitoring window.
               </div>
             </div>
         """)
@@ -55,7 +55,7 @@ def render_anomaly_log(anomalies_df: pd.DataFrame) -> None:
     for _, row in display_df.iterrows():
         state = str(row.get("State", "")).upper()
         color, bg, border = _STATE_STYLES.get(
-            state, ("#adbdcc", "rgba(173,189,204,0.05)", "rgba(173,189,204,0.15)")
+            state, ("#cbd5e1", "rgba(203,213,225,0.05)", "#cbd5e1")
         )
         deviation = row.get("Deviation", 0)
         pvalue    = row.get("p-value", 0)
@@ -69,35 +69,35 @@ def render_anomaly_log(anomalies_df: pd.DataFrame) -> None:
             pvalue_str = str(pvalue)
 
         row_item = f"""
-        <div style="display:grid; grid-template-columns:170px 110px 1fr 120px 100px 110px; padding:10px 16px; gap:8px; border-bottom:1px solid rgba(255,255,255,0.04); align-items:center; background:{bg}; border-left:3px solid {color};">
-          <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-muted); font-feature-settings:'tnum' 1;">{row.get("Timestamp", "—")}</span>
-          <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-primary); font-feature-settings:'tnum' 1; font-weight:500;">{row.get("Analyst", "—")}</span>
-          <span style="font-family:'Inter',sans-serif; font-size:12px; color:var(--text-secondary); font-weight:300;">{row.get("Signal", "—")}</span>
-          <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:{color}; font-feature-settings:'tnum' 1;">{deviation_str}</span>
-          <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-secondary); font-feature-settings:'tnum' 1;">{pvalue_str}</span>
+        <div style="display:grid; grid-template-columns:180px 120px 1fr 130px 110px 110px; padding:12px 18px; gap:10px; border-bottom:1px solid #334155; align-items:center; background:var(--bg-surface); border-left:4px solid {color};">
+          <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-secondary);">{row.get("Timestamp", "—")}</span>
+          <span style="font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--text-primary); font-weight:600;">{row.get("Analyst", "—")}</span>
+          <span style="font-family:'Inter',sans-serif; font-size:13px; color:var(--text-primary);">{row.get("Signal", "—")}</span>
+          <span style="font-family:'JetBrains Mono',monospace; font-size:13px; color:{color}; font-weight:600;">{deviation_str}</span>
+          <span style="font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--text-secondary);">{pvalue_str}</span>
           <div>{_state_badge(state)}</div>
         </div>
         """
         rows_html += _clean_html(row_item)
 
     col_header = _clean_html("""
-    <div style="display:grid; grid-template-columns:170px 110px 1fr 120px 100px 110px; padding:10px 16px; gap:8px; background:rgba(255,255,255,0.04); border-bottom:1px solid var(--border-subtle);">
-      <span style="font-size:10px; font-weight:500; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted);">Timestamp</span>
-      <span style="font-size:10px; font-weight:500; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted);">Analyst</span>
-      <span style="font-size:10px; font-weight:500; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted);">Signal</span>
-      <span style="font-size:10px; font-weight:500; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted);">Deviation (z)</span>
-      <span style="font-size:10px; font-weight:500; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted);">p-value</span>
-      <span style="font-size:10px; font-weight:500; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted);">State</span>
+    <div style="display:grid; grid-template-columns:180px 120px 1fr 130px 110px 110px; padding:12px 18px; gap:10px; background:#334155; border-bottom:1px solid #475569;">
+      <span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#f8fafc;">Timestamp</span>
+      <span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#f8fafc;">Analyst</span>
+      <span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#f8fafc;">Degradation Signal</span>
+      <span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#f8fafc;">Deviation (z)</span>
+      <span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#f8fafc;">p-value</span>
+      <span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#f8fafc;">Severity</span>
     </div>
     """)
 
-    count_label = f"{len(display_df)} anomal{'y' if len(display_df) == 1 else 'ies'} detected"
+    count_label = f"{len(display_df)} anomal{'y' if len(display_df) == 1 else 'ies'} flagged"
 
     full_table = f"""
     <div class="anomaly-table-wrap">
-      <div style="padding:12px 16px 10px; border-bottom:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center;">
-        <span style="font-size:13px; font-weight:400; color:var(--text-primary);">Degradation Events</span>
-        <span style="font-size:11px; color:var(--text-muted); font-family:'JetBrains Mono',monospace;">{count_label}</span>
+      <div style="padding:14px 18px; border-bottom:1px solid #334155; display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-size:14px; font-weight:600; color:var(--text-primary);">Flagged Decision Degradation Events</span>
+        <span style="font-size:12px; color:var(--text-muted); font-family:'JetBrains Mono',monospace;">{count_label}</span>
       </div>
       {col_header}
       {rows_html}
