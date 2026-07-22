@@ -170,6 +170,7 @@ def generate_analyst_logs(
         records.append({
             "analyst_id": analyst_id,
             "alert_id": alert_id,
+            "siem_provider": random.choice(["Cortex XSOAR Connector", "Splunk ES Data Lake", "Microsoft Sentinel Collector", "CrowdStrike Falcon Stream"]),
             "triage_timestamp": triage_ts.strftime("%Y-%m-%dT%H:%M:%SZ"),
             "closure_timestamp": closure_ts.strftime("%Y-%m-%dT%H:%M:%SZ"),
             "closure_type": closure_type,

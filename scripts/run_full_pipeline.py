@@ -71,8 +71,13 @@ def main() -> None:
     escalation_dev = calculate_escalation_deviations(df)
     hourly_rate = calculate_hourly_closure_rate(df)
 
+    siem_prov_col = df["siem_provider"] if "siem_provider" in df.columns else "All Log Sources (OCSF Stream)"
+    closure_type_col = df["closure_type"] if "closure_type" in df.columns else "investigated"
+
     signals_df = pd.DataFrame({
         "analyst_id": df["analyst_id"],
+        "siem_provider": siem_prov_col,
+        "closure_type": closure_type_col,
         "closure_timestamp": df["closure_timestamp"],
         "triage_interval": triage_int,
         "uninvestigated_closures": uninvest_cls,

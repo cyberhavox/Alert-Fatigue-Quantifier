@@ -132,7 +132,7 @@ def main() -> None:
 
         auto_refresh = st.checkbox("Auto-refresh (60s)", value=False)
         st.markdown("---")
-        st.markdown("**SIEM Stream Metrics**")
+        st.markdown("**SIEM Telemetry Metrics**")
         st.markdown("- **Parser Latency:** `1.2 ms`")
         st.markdown("- **Log Collectors:** `5 / 5 Online`")
         st.markdown("- **Schema Format:** `OCSF 1.1.0`")
@@ -149,7 +149,7 @@ def main() -> None:
           </div>
         </div>
         <div style="display:flex; align-items:center; gap:12px;">
-          <span class="siem-status-pill">&bull; SIEM STREAM ACTIVE</span>
+          <span class="siem-status-pill">&bull; SIEM STREAM ACTIVE [{siem_source.split()[0].upper()}]</span>
           <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-secondary); background:#1f2937; padding:4px 10px; border-radius:4px; border:1px solid #374151;">{now_str}</span>
         </div>
       </div>
@@ -164,11 +164,25 @@ def main() -> None:
         st.error("No telemetry logs detected. Execute `python scripts/run_full_pipeline.py` to ingest telemetry.")
         return
 
-    # Filter active shift (last 8 hours)
+    # ── Dynamic Time Window Filtering ─────────────────────────
     scored_df["closure_dt"] = pd.to_datetime(scored_df["closure_timestamp"])
     max_time = scored_df["closure_dt"].max()
-    shift_start = max_time - pd.Timedelta(hours=8)
-    shift_df = scored_df[scored_df["closure_dt"] >= shift_start].copy()
+
+    if shift_filter == "Active 8-Hour Operational Shift":
+        shift_start = max_time - pd.Timedelta(hours=8)
+        shift_df = scored_df[scored_df["closure_dt"] >= shift_start].copy()
+    elif shift_filter == "Last 24 Hours":
+        shift_start = max_time - pd.Timedelta(hours=24)
+        shift_df = scored_df[scored_df["closure_dt"] >= shift_start].copy()
+    else:  # 30-Day Historical Baseline
+        shift_start = scored_df["closure_dt"].min()
+        shift_df = scored_df.copy()
+
+    # ── Dynamic SIEM Provider Filtering ───────────────────────
+    if siem_source != "All Log Sources (OCSF Stream)" and "siem_provider" in shift_df.columns:
+        filtered_provider_df = shift_df[shift_df["siem_provider"] == siem_source].copy()
+        if not filtered_provider_df.empty:
+            shift_df = filtered_provider_df
 
     # ── Calculate Metrics for Top KPI Cards ────────────────────
     total_logs = len(shift_df)
@@ -198,12 +212,12 @@ def main() -> None:
     kpi_html = _clean_html(f"""
     <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:16px; margin-bottom:16px;">
       <div class="siem-kpi-card">
-        <div class="siem-kpi-label">Shift Telemetry Volume</div>
+        <div class="siem-kpi-label">Filtered Telemetry Volume</div>
         <div class="siem-kpi-val" style="color:var(--text-primary);">{total_logs:,}</div>
-        <div class="siem-kpi-sub">OCSF alert events in 8h shift</div>
+        <div class="siem-kpi-sub">{siem_source} &bull; {shift_filter}</div>
       </div>
       <div class="siem-kpi-card">
-        <div class="siem-kpi-label">Global Shift AFI Score</div>
+        <div class="siem-kpi-label">Global AFI Score</div>
         <div class="siem-kpi-val" style="color:{afi_color};">{mean_afi:.1f} <span style="font-size:14px; color:var(--text-secondary);">/ 100</span></div>
         <div class="siem-kpi-sub">Status: <strong style="color:{afi_color};">{global_state}</strong></div>
       </div>
@@ -293,7 +307,9 @@ def main() -> None:
     with col_grid:
         card_cols = st.columns(3)
         for i, aid in enumerate(filtered_analysts):
-            analyst_logs = scored_df[scored_df["analyst_id"] == aid]
+            analyst_logs = shift_df[shift_df["analyst_id"] == aid]
+            if analyst_logs.empty:
+                analyst_logs = scored_df[scored_df["analyst_id"] == aid]
             if analyst_logs.empty:
                 continue
             latest = analyst_logs.sort_values("closure_timestamp").iloc[-1]
@@ -320,7 +336,9 @@ def main() -> None:
                 )
 
     with col_rec:
-        focus_logs = scored_df[scored_df["analyst_id"] == focus_analyst]
+        focus_logs = shift_df[shift_df["analyst_id"] == focus_analyst]
+        if focus_logs.empty:
+            focus_logs = scored_df[scored_df["analyst_id"] == focus_analyst]
         if not focus_logs.empty:
             focus_latest = focus_logs.sort_values("closure_timestamp").iloc[-1]
             focus_score  = float(focus_latest["afi_score"])
@@ -351,7 +369,7 @@ def main() -> None:
     st.markdown('<span class="section-label">Behavioral Signal Telemetry &ensp;|&ensp; Rolling 60-Min Window</span>', unsafe_allow_html=True)
     render_signal_charts(
         analyst_id=focus_analyst,
-        scored_df=scored_df,
+        scored_df=shift_df if not shift_df.empty else scored_df,
         baseline=baselines.get(focus_analyst, {}),
         anomalies_df=anomalies_df,
     )
@@ -366,17 +384,18 @@ def main() -> None:
     # SECTION 4 — Predictive Fatigue Risk Forecast
     # ══════════════════════════════════════════════════════════
     st.markdown('<span class="section-label">Predictive Cognitive Risk Forecast &ensp;|&ensp; Machine Learning Model</span>', unsafe_allow_html=True)
+    active_dataset = shift_df if not shift_df.empty else scored_df
     risk_probabilities = (
-        scored_df["risk_prob"].values if "risk_prob" in scored_df.columns
-        else np.zeros(len(scored_df))
+        active_dataset["risk_prob"].values if "risk_prob" in active_dataset.columns
+        else np.zeros(len(active_dataset))
     )
     risk_predictions = (
-        scored_df["risk_pred"].values if "risk_pred" in scored_df.columns
-        else np.zeros(len(scored_df))
+        active_dataset["risk_pred"].values if "risk_pred" in active_dataset.columns
+        else np.zeros(len(active_dataset))
     )
     render_forecast_panel(
         analyst_id=focus_analyst,
-        scored_df=scored_df,
+        scored_df=active_dataset,
         risk_probabilities=risk_probabilities,
         risk_predictions=risk_predictions,
     )
