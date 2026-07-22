@@ -113,16 +113,10 @@ def main() -> None:
     with st.spinner("Connecting to SIEM Telemetry Collectors..."):
         _bootstrap_pipeline()
 
-    # ── Sidebar Filter Panel (Matching Real SIEM Dashboards) ──
+    # ── Sidebar Filter Panel ──────────────────────────────────
     with st.sidebar:
         st.markdown("### SIEM Control &amp; Filters", unsafe_allow_html=True)
         st.caption("OCSF Telemetry Stream Configuration")
-
-        siem_source = st.selectbox(
-            "SIEM Log Provider",
-            options=["All Log Sources (OCSF Stream)", "Cortex XSOAR Connector", "Splunk ES Data Lake", "Microsoft Sentinel Collector", "CrowdStrike Falcon Stream"],
-            index=0
-        )
 
         shift_filter = st.selectbox(
             "Shift Monitoring Window",
@@ -149,7 +143,7 @@ def main() -> None:
           </div>
         </div>
         <div style="display:flex; align-items:center; gap:12px;">
-          <span class="siem-status-pill">&bull; SIEM STREAM ACTIVE [{siem_source.split()[0].upper()}]</span>
+          <span class="siem-status-pill">&bull; SIEM STREAM ACTIVE</span>
           <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-secondary); background:#1f2937; padding:4px 10px; border-radius:4px; border:1px solid #374151;">{now_str}</span>
         </div>
       </div>
@@ -177,12 +171,6 @@ def main() -> None:
     else:  # 30-Day Historical Baseline
         shift_start = scored_df["closure_dt"].min()
         shift_df = scored_df.copy()
-
-    # ── Dynamic SIEM Provider Filtering ───────────────────────
-    if siem_source != "All Log Sources (OCSF Stream)" and "siem_provider" in shift_df.columns:
-        filtered_provider_df = shift_df[shift_df["siem_provider"] == siem_source].copy()
-        if not filtered_provider_df.empty:
-            shift_df = filtered_provider_df
 
     # ── Calculate Metrics for Top KPI Cards ────────────────────
     total_logs = len(shift_df)
@@ -212,12 +200,12 @@ def main() -> None:
     kpi_html = _clean_html(f"""
     <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:16px; margin-bottom:16px;">
       <div class="siem-kpi-card">
-        <div class="siem-kpi-label">Filtered Telemetry Volume</div>
+        <div class="siem-kpi-label">Shift Telemetry Volume</div>
         <div class="siem-kpi-val" style="color:var(--text-primary);">{total_logs:,}</div>
-        <div class="siem-kpi-sub">{siem_source} &bull; {shift_filter}</div>
+        <div class="siem-kpi-sub">OCSF logs &bull; {shift_filter}</div>
       </div>
       <div class="siem-kpi-card">
-        <div class="siem-kpi-label">Global AFI Score</div>
+        <div class="siem-kpi-label">Global Shift AFI Score</div>
         <div class="siem-kpi-val" style="color:{afi_color};">{mean_afi:.1f} <span style="font-size:14px; color:var(--text-secondary);">/ 100</span></div>
         <div class="siem-kpi-sub">Status: <strong style="color:{afi_color};">{global_state}</strong></div>
       </div>
