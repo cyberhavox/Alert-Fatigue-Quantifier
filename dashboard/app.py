@@ -1,7 +1,7 @@
 """Alert Fatigue Quantifier (AFQ) — Professional SOC Operations Dashboard.
 
 Monitors real-time analyst cognitive load, detects decision-quality degradation,
-and forecasts upcoming fatigue risk in Security Operations Centers.
+forecasts upcoming fatigue risk, and presents academic methodology & literature base.
 """
 
 from __future__ import annotations
@@ -25,6 +25,7 @@ from dashboard.components.signal_charts import render_signal_charts
 from dashboard.components.anomaly_log import render_anomaly_log
 from dashboard.components.forecast_panel import render_forecast_panel
 from dashboard.components.recommendation_panel import render_recommendation_panel
+from dashboard.components.methodology_panel import render_methodology_panel
 
 # ── Page Configuration ───────────────────────────────────────
 st.set_page_config(
@@ -112,7 +113,7 @@ def main() -> None:
     with st.spinner("Initializing Telemetry Engine..."):
         _bootstrap_pipeline()
 
-    # ── Clean Professional Header Bar ─────────────────────────
+    # ── Header Bar ────────────────────────────────────────────
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
     header_html = _clean_html(f"""
     <div class="afq-header">
@@ -125,188 +126,198 @@ def main() -> None:
         </div>
         <div style="display:flex; align-items:center; gap:12px;">
           <span class="afq-header-live">&bull; TELEMETRY STREAM ACTIVE</span>
-          <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-secondary); background:#334155; padding:4px 10px; border-radius:4px;">{now_str}</span>
+          <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-secondary); background:#e2e8f0; padding:4px 10px; border-radius:4px;">{now_str}</span>
         </div>
       </div>
     </div>
     """)
     st.markdown(header_html, unsafe_allow_html=True)
 
-    # ── Data Loading ──────────────────────────────────────────
-    scored_df, anomalies_df, baselines = load_pipeline_data()
+    # ── Primary Navigation Tabs ───────────────────────────────
+    main_tab1, main_tab2 = st.tabs([
+        "Live SOC Operations Dashboard",
+        "Research Methodology & Literature Base (18 Sources)"
+    ])
 
-    if scored_df.empty:
-        st.error("No telemetry logs detected. Execute `python scripts/run_full_pipeline.py` to ingest telemetry.")
-        return
+    with main_tab2:
+        render_methodology_panel()
 
-    # Filter active shift (last 8 hours)
-    scored_df["closure_dt"] = pd.to_datetime(scored_df["closure_timestamp"])
-    max_time = scored_df["closure_dt"].max()
-    shift_start = max_time - pd.Timedelta(hours=8)
-    shift_df = scored_df[scored_df["closure_dt"] >= shift_start].copy()
+    with main_tab1:
+        # ── Data Loading ──────────────────────────────────────
+        scored_df, anomalies_df, baselines = load_pipeline_data()
 
-    # ── High Contrast KPI Cards ───────────────────────────────
-    total_logs = len(shift_df)
-    unique_analysts = sorted(scored_df["analyst_id"].unique())
+        if scored_df.empty:
+            st.error("No telemetry logs detected. Execute `python scripts/run_full_pipeline.py` to ingest telemetry.")
+            return
 
-    latest_per_analyst = shift_df.sort_values("closure_dt").groupby("analyst_id").last()
-    mean_afi = latest_per_analyst["afi_score"].mean() if not latest_per_analyst.empty else 0.0
-    global_state = _afi_state(mean_afi)
+        # Filter active shift (last 8 hours)
+        scored_df["closure_dt"] = pd.to_datetime(scored_df["closure_timestamp"])
+        max_time = scored_df["closure_dt"].max()
+        shift_start = max_time - pd.Timedelta(hours=8)
+        shift_df = scored_df[scored_df["closure_dt"] >= shift_start].copy()
 
-    mean_triage = shift_df["triage_interval"].mean() if not shift_df.empty else 0.0
-    anom_count = len(anomalies_df)
+        # ── High Contrast KPI Cards ───────────────────────────
+        total_logs = len(shift_df)
+        unique_analysts = sorted(scored_df["analyst_id"].unique())
 
-    afi_color = "#10b981" if mean_afi < 50 else ("#f59e0b" if mean_afi < 70 else "#ef4444")
+        latest_per_analyst = shift_df.sort_values("closure_dt").groupby("analyst_id").last()
+        mean_afi = latest_per_analyst["afi_score"].mean() if not latest_per_analyst.empty else 0.0
+        global_state = _afi_state(mean_afi)
 
-    kpi_html = _clean_html(f"""
-    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:16px; margin-bottom:20px;">
-      <div class="kpi-card">
-        <div class="kpi-label">Shift Log Volume</div>
-        <div class="kpi-value" style="color:var(--text-primary);">{total_logs:,}</div>
-        <div class="kpi-sub">Alert logs in active 8h shift</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Global Mean AFI Score</div>
-        <div class="kpi-value" style="color:{afi_color};">{mean_afi:.1f} <span style="font-size:14px; color:var(--text-secondary);">/ 100</span></div>
-        <div class="kpi-sub">Status: <strong style="color:{afi_color};">{global_state}</strong></div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Degradation Anomalies</div>
-        <div class="kpi-value" style="color:#ef4444;">{anom_count}</div>
-        <div class="kpi-sub">MWU statistical flags (p &lt; 0.05)</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Mean Triage Latency</div>
-        <div class="kpi-value" style="color:var(--text-primary);">{mean_triage:.0f}s</div>
-        <div class="kpi-sub">Log-Normal response time</div>
-      </div>
-    </div>
-    """)
-    st.markdown(kpi_html, unsafe_allow_html=True)
+        mean_triage = shift_df["triage_interval"].mean() if not shift_df.empty else 0.0
+        anom_count = len(anomalies_df)
 
-    # ── Controls Bar ──────────────────────────────────────────
-    ctrl_left, ctrl_right = st.columns([4, 1])
-    with ctrl_left:
-        filtered_analysts = st.multiselect(
-            "Select SOC Analyst Roster",
-            options=unique_analysts,
-            default=unique_analysts,
-            help="Filter the active shift cards and telemetry timeline.",
+        afi_color = "#059669" if mean_afi < 50 else ("#d97706" if mean_afi < 70 else "#dc2626")
+
+        kpi_html = _clean_html(f"""
+        <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:16px; margin-bottom:20px;">
+          <div class="kpi-card">
+            <div class="kpi-label">Shift Log Volume</div>
+            <div class="kpi-value" style="color:var(--text-primary);">{total_logs:,}</div>
+            <div class="kpi-sub">Alert logs in active 8h shift</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Global Mean AFI Score</div>
+            <div class="kpi-value" style="color:{afi_color};">{mean_afi:.1f} <span style="font-size:14px; color:var(--text-secondary);">/ 100</span></div>
+            <div class="kpi-sub">Status: <strong style="color:{afi_color};">{global_state}</strong></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Degradation Anomalies</div>
+            <div class="kpi-value" style="color:#dc2626;">{anom_count}</div>
+            <div class="kpi-sub">MWU statistical flags (p &lt; 0.05)</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Mean Triage Latency</div>
+            <div class="kpi-value" style="color:var(--text-primary);">{mean_triage:.0f}s</div>
+            <div class="kpi-sub">Log-Normal response time</div>
+          </div>
+        </div>
+        """)
+        st.markdown(kpi_html, unsafe_allow_html=True)
+
+        # ── Controls Bar ──────────────────────────────────────
+        ctrl_left, ctrl_right = st.columns([4, 1])
+        with ctrl_left:
+            filtered_analysts = st.multiselect(
+                "Select SOC Analyst Roster",
+                options=unique_analysts,
+                default=unique_analysts,
+                help="Filter the active shift cards and telemetry timeline.",
+            )
+        with ctrl_right:
+            auto_refresh = st.checkbox("Auto-refresh (60s)", value=False)
+
+        if not filtered_analysts:
+            st.warning("Select at least one analyst to view telemetry.")
+            return
+
+        focus_analyst = st.selectbox(
+            "Focus Analyst (Detailed Telemetry, Advisory & Forecast)",
+            options=filtered_analysts,
+            index=0,
         )
-    with ctrl_right:
-        auto_refresh = st.checkbox("Auto-refresh (60s)", value=False)
 
-    if not filtered_analysts:
-        st.warning("Select at least one analyst to view telemetry.")
-        return
+        # ══════════════════════════════════════════════════════════
+        # SECTION 1 — Active Analysts Shift Status
+        # ══════════════════════════════════════════════════════════
+        st.markdown('<span class="section-label">Active SOC Roster &ensp;|&ensp; Cognitive Load Gauge</span>', unsafe_allow_html=True)
 
-    focus_analyst = st.selectbox(
-        "Focus Analyst (Detailed Telemetry, Advisory & Forecast)",
-        options=filtered_analysts,
-        index=0,
-    )
+        col_grid, col_rec = st.columns([3, 1])
 
-    # ══════════════════════════════════════════════════════════
-    # SECTION 1 — Active Analysts Shift Status
-    # ══════════════════════════════════════════════════════════
-    st.markdown('<span class="section-label">Active SOC Roster &ensp;|&ensp; Cognitive Load Gauge</span>', unsafe_allow_html=True)
+        with col_grid:
+            card_cols = st.columns(3)
+            for i, aid in enumerate(filtered_analysts):
+                analyst_logs = scored_df[scored_df["analyst_id"] == aid]
+                if analyst_logs.empty:
+                    continue
+                latest = analyst_logs.sort_values("closure_timestamp").iloc[-1]
+                base   = baselines.get(aid, {})
+                score  = float(latest["afi_score"])
+                state  = _afi_state(score)
+                ts_str = pd.to_datetime(latest["closure_timestamp"]).strftime("%H:%M")
 
-    col_grid, col_rec = st.columns([3, 1])
+                signals = {
+                    "triage_interval":        latest["triage_interval"],
+                    "enrichment_depth":       latest["enrichment_depth"],
+                    "uninvestigated_closures":latest["uninvestigated_closures"],
+                    "escalation_deviations":  latest["escalation_deviations"],
+                    "hourly_closure_rate":    latest["hourly_closure_rate"],
+                }
+                with card_cols[i % 3]:
+                    render_analyst_card(
+                        analyst_id=aid,
+                        afi_score=score,
+                        state=state,
+                        timestamp=ts_str,
+                        signals=signals,
+                        baseline=base,
+                    )
 
-    with col_grid:
-        card_cols = st.columns(3)
-        for i, aid in enumerate(filtered_analysts):
-            analyst_logs = scored_df[scored_df["analyst_id"] == aid]
-            if analyst_logs.empty:
-                continue
-            latest = analyst_logs.sort_values("closure_timestamp").iloc[-1]
-            base   = baselines.get(aid, {})
-            score  = float(latest["afi_score"])
-            state  = _afi_state(score)
-            ts_str = pd.to_datetime(latest["closure_timestamp"]).strftime("%H:%M")
+        with col_rec:
+            focus_logs = scored_df[scored_df["analyst_id"] == focus_analyst]
+            if not focus_logs.empty:
+                focus_latest = focus_logs.sort_values("closure_timestamp").iloc[-1]
+                focus_score  = float(focus_latest["afi_score"])
+                focus_pred   = int(focus_latest.get("risk_pred", 0))
 
-            signals = {
-                "triage_interval":        latest["triage_interval"],
-                "enrichment_depth":       latest["enrichment_depth"],
-                "uninvestigated_closures":latest["uninvestigated_closures"],
-                "escalation_deviations":  latest["escalation_deviations"],
-                "hourly_closure_rate":    latest["hourly_closure_rate"],
-            }
-            with card_cols[i % 3]:
-                render_analyst_card(
-                    analyst_id=aid,
-                    afi_score=score,
-                    state=state,
-                    timestamp=ts_str,
-                    signals=signals,
-                    baseline=base,
+                focus_anom_records: list = []
+                if not anomalies_df.empty:
+                    fa = anomalies_df[anomalies_df["Analyst"] == focus_analyst].copy()
+                    if not fa.empty:
+                        fa["closure_dt"] = pd.to_datetime(fa["Timestamp"])
+                        fa = fa[fa["closure_dt"] >= shift_start]
+                        focus_anom_records = fa.to_dict("records")
+
+                recs = get_advisory_recommendations(
+                    afi_score=focus_score,
+                    anomalies=focus_anom_records,
+                    prediction_flag=focus_pred,
+                )
+                render_recommendation_panel(
+                    analyst_id=focus_analyst,
+                    afi_score=focus_score,
+                    recommendations=recs,
                 )
 
-    with col_rec:
-        focus_logs = scored_df[scored_df["analyst_id"] == focus_analyst]
-        if not focus_logs.empty:
-            focus_latest = focus_logs.sort_values("closure_timestamp").iloc[-1]
-            focus_score  = float(focus_latest["afi_score"])
-            focus_pred   = int(focus_latest.get("risk_pred", 0))
+        # ══════════════════════════════════════════════════════════
+        # SECTION 2 — Signal Telemetry Time-Series
+        # ══════════════════════════════════════════════════════════
+        st.markdown('<span class="section-label">Behavioral Signal Trends &ensp;|&ensp; Rolling 60-Min Window</span>', unsafe_allow_html=True)
+        render_signal_charts(
+            analyst_id=focus_analyst,
+            scored_df=scored_df,
+            baseline=baselines.get(focus_analyst, {}),
+            anomalies_df=anomalies_df,
+        )
 
-            focus_anom_records: list = []
-            if not anomalies_df.empty:
-                fa = anomalies_df[anomalies_df["Analyst"] == focus_analyst].copy()
-                if not fa.empty:
-                    fa["closure_dt"] = pd.to_datetime(fa["Timestamp"])
-                    fa = fa[fa["closure_dt"] >= shift_start]
-                    focus_anom_records = fa.to_dict("records")
+        # ══════════════════════════════════════════════════════════
+        # SECTION 3 — Degradation Anomaly Audit Log
+        # ══════════════════════════════════════════════════════════
+        st.markdown('<span class="section-label">Decision Degradation Audit Log &ensp;|&ensp; Mann–Whitney U Test</span>', unsafe_allow_html=True)
+        render_anomaly_log(anomalies_df)
 
-            recs = get_advisory_recommendations(
-                afi_score=focus_score,
-                anomalies=focus_anom_records,
-                prediction_flag=focus_pred,
-            )
-            render_recommendation_panel(
-                analyst_id=focus_analyst,
-                afi_score=focus_score,
-                recommendations=recs,
-            )
+        # ══════════════════════════════════════════════════════════
+        # SECTION 4 — Predictive Fatigue Risk Forecast
+        # ══════════════════════════════════════════════════════════
+        st.markdown('<span class="section-label">Predictive Cognitive Risk Forecast &ensp;|&ensp; Machine Learning Model</span>', unsafe_allow_html=True)
+        risk_probabilities = (
+            scored_df["risk_prob"].values if "risk_prob" in scored_df.columns
+            else np.zeros(len(scored_df))
+        )
+        risk_predictions = (
+            scored_df["risk_pred"].values if "risk_pred" in scored_df.columns
+            else np.zeros(len(scored_df))
+        )
+        render_forecast_panel(
+            analyst_id=focus_analyst,
+            scored_df=scored_df,
+            risk_probabilities=risk_probabilities,
+            risk_predictions=risk_predictions,
+        )
 
-    # ══════════════════════════════════════════════════════════
-    # SECTION 2 — Signal Telemetry Time-Series
-    # ══════════════════════════════════════════════════════════
-    st.markdown('<span class="section-label">Behavioral Signal Trends &ensp;|&ensp; Rolling 60-Min Window</span>', unsafe_allow_html=True)
-    render_signal_charts(
-        analyst_id=focus_analyst,
-        scored_df=scored_df,
-        baseline=baselines.get(focus_analyst, {}),
-        anomalies_df=anomalies_df,
-    )
-
-    # ══════════════════════════════════════════════════════════
-    # SECTION 3 — Degradation Anomaly Audit Log
-    # ══════════════════════════════════════════════════════════
-    st.markdown('<span class="section-label">Decision Degradation Audit Log &ensp;|&ensp; Mann–Whitney U Test</span>', unsafe_allow_html=True)
-    render_anomaly_log(anomalies_df)
-
-    # ══════════════════════════════════════════════════════════
-    # SECTION 4 — Predictive Fatigue Risk Forecast
-    # ══════════════════════════════════════════════════════════
-    st.markdown('<span class="section-label">Predictive Cognitive Risk Forecast &ensp;|&ensp; Machine Learning Model</span>', unsafe_allow_html=True)
-    risk_probabilities = (
-        scored_df["risk_prob"].values if "risk_prob" in scored_df.columns
-        else np.zeros(len(scored_df))
-    )
-    risk_predictions = (
-        scored_df["risk_pred"].values if "risk_pred" in scored_df.columns
-        else np.zeros(len(scored_df))
-    )
-    render_forecast_panel(
-        analyst_id=focus_analyst,
-        scored_df=scored_df,
-        risk_probabilities=risk_probabilities,
-        risk_predictions=risk_predictions,
-    )
-
-    if auto_refresh:
-        time.sleep(60)
-        st.rerun()
+        if auto_refresh:
+            time.sleep(60)
+            st.rerun()
 
 
 if __name__ == "__main__":
