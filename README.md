@@ -80,7 +80,7 @@ Raw Alert Logs  ──►  Signal Extraction  ──►  AFI Score (0–100)
 
 <div align="center">
 
-**[Live Demo →](https://alert-fatigue-quantifier.streamlit.app)**
+**[Live Demo → https://alert-fatigue-quantifier.streamlit.app](https://alert-fatigue-quantifier.streamlit.app)**
 
 </div>
 
