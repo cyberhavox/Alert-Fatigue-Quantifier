@@ -1,7 +1,6 @@
-"""Alert Fatigue Quantifier — Enterprise SOC Command Center Dashboard.
+"""Alert Fatigue Quantifier — Enterprise Cyber SOC Command Center.
 
-Orchestrates SIEM alert telemetry, cognitive load monitoring, statistical degradation,
-and predictive machine learning risk forecasting for SOC management.
+Splunk ES / Cortex XSOAR Inspired Operations Dashboard for Security Analysts and SOC Management.
 """
 
 from __future__ import annotations
@@ -26,9 +25,9 @@ from dashboard.components.anomaly_log import render_anomaly_log
 from dashboard.components.forecast_panel import render_forecast_panel
 from dashboard.components.recommendation_panel import render_recommendation_panel
 
-# ── Page Configuration ───────────────────────────────────────
+# ── Page Setup ───────────────────────────────────────────────
 st.set_page_config(
-    page_title="SOC Command Center | Alert Fatigue Quantifier",
+    page_title="SIEM/SOAR SOC Command Center | AFQ System",
     page_icon=None,
     layout="wide",
     initial_sidebar_state="expanded"
@@ -42,13 +41,13 @@ if os.path.exists(_theme_path):
 
 
 def _clean_html(raw_html: str) -> str:
-    """Strips multiline indentation to prevent Streamlit from rendering raw HTML as codeblocks."""
+    """Strips multiline indentation to prevent Streamlit raw codeblock rendering bug."""
     return "".join([line.strip() for line in raw_html.split("\n")])
 
 
 @st.cache_resource
 def _bootstrap_pipeline() -> bool:
-    """Runs pipeline once on startup if output files do not exist."""
+    """Generates synthetic logs and runs pipeline once if missing."""
     scored_path = os.path.join(WORKSPACE_ROOT, "data", "output", "scored_alerts.csv")
     if os.path.exists(scored_path):
         return True
@@ -60,7 +59,7 @@ def _bootstrap_pipeline() -> bool:
     for cmd in scripts:
         res = subprocess.run(cmd, cwd=WORKSPACE_ROOT, capture_output=True, text=True)
         if res.returncode != 0:
-            st.error(f"Pipeline error: {res.stderr[:300]}")
+            st.error(f"Pipeline execution error: {res.stderr[:300]}")
             return False
     return True
 
@@ -108,114 +107,112 @@ def _afi_state(score: float) -> str:
 
 
 def main() -> None:
-    # ── Auto-Bootstrap Pipeline ───────────────────────────────
-    with st.spinner("Initializing SOC Telemetry Pipeline..."):
+    # ── Auto Pipeline Bootstrap ───────────────────────────────
+    with st.spinner("Initializing SIEM Telemetry Stream..."):
         _bootstrap_pipeline()
 
-    # ── SIEM Command Center Header ────────────────────────────
-    now_str = datetime.now().strftime("%H:%M:%S UTC")
+    # ── SIEM / SOAR Header Bar ────────────────────────────────
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
     header_html = _clean_html(f"""
-    <div class="afq-header">
-      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+    <div class="siem-header">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
         <div>
-          <div style="display:flex; align-items:center; gap:12px; margin-bottom:4px;">
-            <div class="afq-header-title">SOC Command Center &ensp;|&ensp; Alert Fatigue Quantifier</div>
+          <div class="siem-title">
+            <span style="color:var(--accent-cyan);">SPLUNK / CORTEX XSOAR</span> &ensp;|&ensp; SOC COMMAND CENTER
           </div>
-          <div class="afq-header-subtitle">
-            Enterprise Cognitive Capacity &amp; Behavioral Degradation Engine &ensp;&bull;&ensp; Real-Time Advisory Mode
+          <div class="siem-subtitle">
+            Alert Fatigue Quantifier (AFQ) &bull; Cognitive Capacity &amp; Operational Degradation Engine
           </div>
         </div>
-        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px;">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span class="afq-header-live">SIEM INGEST ACTIVE</span>
-            <span style="font-size:10px; padding:3px 8px; border-radius:4px; background:rgba(255,255,255,0.06); color:var(--text-secondary); font-family:'JetBrains Mono',monospace;">SHIFT ALPHA</span>
-          </div>
-          <span style="font-size:11px; color:var(--text-muted); font-family:'JetBrains Mono',monospace;">{now_str}</span>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span class="siem-status-tag siem-tag-live">&bull; STREAMING ACTIVE</span>
+          <span class="siem-status-tag siem-tag-info">SHIFT: ALPHA</span>
+          <span style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-muted);">{now_str}</span>
         </div>
       </div>
     </div>
     """)
     st.markdown(header_html, unsafe_allow_html=True)
 
-    # ── Data Loading ──────────────────────────────────────────
+    # ── Load Scored Data ──────────────────────────────────────
     scored_df, anomalies_df, baselines = load_pipeline_data()
 
     if scored_df.empty:
-        st.info("No telemetry logs ingested. Run `python scripts/run_full_pipeline.py` to start telemetry engine.")
+        st.error("No SIEM logs detected. Execute `python scripts/run_full_pipeline.py` to ingest telemetry.")
         return
 
-    # Filter data for current 8-hour shift
+    # Filter active shift (last 8 hours)
     scored_df["closure_dt"] = pd.to_datetime(scored_df["closure_timestamp"])
     max_time = scored_df["closure_dt"].max()
     shift_start = max_time - pd.Timedelta(hours=8)
     shift_df = scored_df[scored_df["closure_dt"] >= shift_start].copy()
 
-    # ── Enterprise KPI Overview Strip ─────────────────────────
+    # ── Calculate Metrics for Top KPI Cards ────────────────────
     total_logs = len(shift_df)
     unique_analysts = sorted(scored_df["analyst_id"].unique())
-    
-    # Calculate global shift metrics
+
     latest_per_analyst = shift_df.sort_values("closure_dt").groupby("analyst_id").last()
     mean_afi = latest_per_analyst["afi_score"].mean() if not latest_per_analyst.empty else 0.0
     global_state = _afi_state(mean_afi)
-    
+
     mean_triage = shift_df["triage_interval"].mean() if not shift_df.empty else 0.0
     anom_count = len(anomalies_df)
 
-    kpi_color = "#10b981" if mean_afi < 50 else ("#f59e0b" if mean_afi < 70 else "#f43f5e")
+    afi_color = "#10b981" if mean_afi < 50 else ("#f59e0b" if mean_afi < 70 else "#ff0055")
 
+    # ── Top 4 SIEM KPI Cards ──────────────────────────────────
     kpi_html = _clean_html(f"""
-    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:16px; margin-bottom:24px;">
-      <div style="background:rgba(20,25,54,0.85); backdrop-filter:blur(12px); border:1px solid var(--border-subtle); border-radius:var(--radius-lg); padding:16px 20px; box-shadow:var(--shadow-card);">
-        <div style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); margin-bottom:6px;">Active Shift Ingestion</div>
-        <div style="font-size:28px; font-weight:300; font-family:'JetBrains Mono',monospace; color:var(--text-primary);">{total_logs:,}<span style="font-size:13px; color:var(--text-muted); margin-left:6px;">logs</span></div>
-        <div style="font-size:11px; color:var(--text-secondary); margin-top:4px;">Poisson λ = 15-28 alerts/hr</div>
+    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:14px; margin-bottom:20px;">
+      <div class="siem-kpi-card kpi-cyan">
+        <div class="siem-kpi-label">SIEM Ingestion Stream</div>
+        <div class="siem-kpi-value" style="color:var(--accent-cyan);">{total_logs:,}</div>
+        <div class="siem-kpi-sub">Processed Shift Alerts (8h window)</div>
       </div>
-      <div style="background:rgba(20,25,54,0.85); backdrop-filter:blur(12px); border:1px solid var(--border-subtle); border-radius:var(--radius-lg); padding:16px 20px; box-shadow:var(--shadow-card);">
-        <div style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); margin-bottom:6px;">Global Shift Fatigue Index</div>
-        <div style="font-size:28px; font-weight:300; font-family:'JetBrains Mono',monospace; color:{kpi_color};">{mean_afi:.1f}<span style="font-size:13px; color:var(--text-muted); margin-left:6px;">/ 100 AFI</span></div>
-        <div style="font-size:11px; color:var(--text-secondary); margin-top:4px;">Shift Status: <strong style="color:{kpi_color};">{global_state}</strong></div>
+      <div class="siem-kpi-card kpi-indigo">
+        <div class="siem-kpi-label">Global Shift Fatigue Index</div>
+        <div class="siem-kpi-value" style="color:{afi_color};">{mean_afi:.1f} <span style="font-size:14px; color:var(--text-muted);">/ 100 AFI</span></div>
+        <div class="siem-kpi-sub">Shift Status: <strong style="color:{afi_color};">{global_state}</strong></div>
       </div>
-      <div style="background:rgba(20,25,54,0.85); backdrop-filter:blur(12px); border:1px solid var(--border-subtle); border-radius:var(--radius-lg); padding:16px 20px; box-shadow:var(--shadow-card);">
-        <div style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); margin-bottom:6px;">Degradation Events (MWU)</div>
-        <div style="font-size:28px; font-weight:300; font-family:'JetBrains Mono',monospace; color:#f43f5e;">{anom_count}<span style="font-size:13px; color:var(--text-muted); margin-left:6px;">anomalies</span></div>
-        <div style="font-size:11px; color:var(--text-secondary); margin-top:4px;">p-value &lt; 0.05 vs baseline</div>
+      <div class="siem-kpi-card kpi-critical">
+        <div class="siem-kpi-label">Degradation Anomalies</div>
+        <div class="siem-kpi-value" style="color:#ff0055;">{anom_count}</div>
+        <div class="siem-kpi-sub">MWU Non-Parametric Alarms (p &lt; 0.05)</div>
       </div>
-      <div style="background:rgba(20,25,54,0.85); backdrop-filter:blur(12px); border:1px solid var(--border-subtle); border-radius:var(--radius-lg); padding:16px 20px; box-shadow:var(--shadow-card);">
-        <div style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.8px; color:var(--text-muted); margin-bottom:6px;">Mean Triage Latency</div>
-        <div style="font-size:28px; font-weight:300; font-family:'JetBrains Mono',monospace; color:var(--text-primary);">{mean_triage:.0f}<span style="font-size:13px; color:var(--text-muted); margin-left:6px;">sec</span></div>
-        <div style="font-size:11px; color:var(--text-secondary); margin-top:4px;">Log-Normal Distribution</div>
+      <div class="siem-kpi-card kpi-amber">
+        <div class="siem-kpi-label">Mean Triage Response Latency</div>
+        <div class="siem-kpi-value" style="color:var(--text-primary);">{mean_triage:.0f}s</div>
+        <div class="siem-kpi-sub">Log-Normal Triage Interval</div>
       </div>
     </div>
     """)
     st.markdown(kpi_html, unsafe_allow_html=True)
 
-    # ── Controls Bar ──────────────────────────────────────────
+    # ── Roster Filter Controls ────────────────────────────────
     ctrl_left, ctrl_right = st.columns([4, 1])
     with ctrl_left:
         filtered_analysts = st.multiselect(
-            "Filter SOC Analyst Roster",
+            "SOC Analyst Roster Filter",
             options=unique_analysts,
             default=unique_analysts,
-            help="Filter the active shift status grid and signal charts.",
+            help="Filter the active shift cards and telemetry timeline.",
         )
     with ctrl_right:
-        auto_refresh = st.checkbox("SIEM Live Sync (60s)", value=False)
+        auto_refresh = st.checkbox("Live SIEM Stream (60s)", value=False)
 
     if not filtered_analysts:
-        st.warning("Select at least one analyst to display telemetry.")
+        st.warning("Select at least one analyst to view SIEM telemetry.")
         return
 
     focus_analyst = st.selectbox(
-        "Focus Analyst (Detailed Telemetry, Advisory & Forecast)",
+        "Focus Analyst Investigation Node",
         options=filtered_analysts,
         index=0,
     )
 
     # ══════════════════════════════════════════════════════════
-    # SECTION 1 — Active SOC Analysts Shift Status + Advisory
+    # SECTION 1 — Active Analysts Shift Status Grid
     # ══════════════════════════════════════════════════════════
-    st.markdown('<span class="section-label">Active SOC Roster &ensp;|&ensp; Shift Cognitive Load</span>', unsafe_allow_html=True)
+    st.markdown('<span class="section-label">Active Analyst Shift Status &ensp;|&ensp; Live AFI Score</span>', unsafe_allow_html=True)
 
     col_grid, col_rec = st.columns([3, 1])
 
@@ -275,9 +272,9 @@ def main() -> None:
             )
 
     # ══════════════════════════════════════════════════════════
-    # SECTION 2 — Signal Telemetry Trends
+    # SECTION 2 — Signal Telemetry Time-Series
     # ══════════════════════════════════════════════════════════
-    st.markdown('<span class="section-label">SIEM Behavioral Signal Trends &ensp;|&ensp; Rolling 60-Min Window</span>', unsafe_allow_html=True)
+    st.markdown('<span class="section-label">SIEM Telemetry Signal Trends &ensp;|&ensp; Rolling 60-Minute Window</span>', unsafe_allow_html=True)
     render_signal_charts(
         analyst_id=focus_analyst,
         scored_df=scored_df,
@@ -286,15 +283,15 @@ def main() -> None:
     )
 
     # ══════════════════════════════════════════════════════════
-    # SECTION 3 — Degradation Anomaly Audit Log
+    # SECTION 3 — Anomaly Audit Log
     # ══════════════════════════════════════════════════════════
-    st.markdown('<span class="section-label">Decision Degradation Audit Log &ensp;|&ensp; Mann–Whitney U Non-Parametric Test</span>', unsafe_allow_html=True)
+    st.markdown('<span class="section-label">Behavioral Degradation Audit Log &ensp;|&ensp; Mann–Whitney U Test (p &lt; 0.05)</span>', unsafe_allow_html=True)
     render_anomaly_log(anomalies_df)
 
     # ══════════════════════════════════════════════════════════
     # SECTION 4 — Predictive Fatigue Risk Forecast
     # ══════════════════════════════════════════════════════════
-    st.markdown('<span class="section-label">Predictive Cognitive Risk Forecast &ensp;|&ensp; Random Forest Classifier</span>', unsafe_allow_html=True)
+    st.markdown('<span class="section-label">Predictive Fatigue Risk Forecast &ensp;|&ensp; Random Forest Classifier</span>', unsafe_allow_html=True)
     risk_probabilities = (
         scored_df["risk_prob"].values if "risk_prob" in scored_df.columns
         else np.zeros(len(scored_df))
@@ -310,7 +307,6 @@ def main() -> None:
         risk_predictions=risk_predictions,
     )
 
-    # ── Auto-refresh ──────────────────────────────────────────
     if auto_refresh:
         time.sleep(60)
         st.rerun()
