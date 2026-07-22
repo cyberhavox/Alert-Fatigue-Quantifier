@@ -38,3 +38,17 @@ env/
 .idea/
 *.swp
 *.swo
+
+# Large report artifacts (not needed for deployment)
+docs/report/*.pdf
+docs/report/*.docx
+docs/report/*.zip
+docs/report/~$*
+docs/report/*.png
+Research_Project_Guidelines*.pdf
+package-lock.json
+node_modules/
+
+# Temp/scratch
+*.pkl
+data/models/*.pkl

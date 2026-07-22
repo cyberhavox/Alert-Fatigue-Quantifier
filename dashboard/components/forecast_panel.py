@@ -1,141 +1,196 @@
-"""Forecast Panel component for the Streamlit dashboard.
+"""Predictive Fatigue Risk Forecast panel — Stripi Design Language.
 
-Renders upcoming machine learning fatigue risk forecasts, displaying risk probabilities,
-classification outcomes, and a rolling timeline chart of forecasted risk levels.
+Renders ML-derived fatigue risk metrics and rolling probability timeline chart.
+Uses custom HTML for metric display and Matplotlib with Stripi palette for the chart.
+Zero emojis, plain engineering voice.
 """
 
+from __future__ import annotations
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 import pandas as pd
 import numpy as np
 import streamlit as st
+
+# Stripi design tokens (mirrors theme.css)
+_BG_SURFACE   = "#1c1e54"
+_BG_ELEVATED  = "#242b5e"
+_BORDER       = "#2a3060"
+_TEXT_PRIMARY = "#f6f9fc"
+_TEXT_MUTED   = "#64748d"
+_TEXT_SEC     = "#a8c3de"
+_COLOR_INDIGO = "#533afd"   # primary CTA — used for nominal risk line
+_COLOR_RUBY   = "#ea2261"   # ruby — elevated/high risk line
+_COLOR_AMBER  = "#f59e0b"   # elevated
+_COLOR_TEAL   = "#00c896"   # nominal state
+
+
+def _risk_color(pred: int, prob: float) -> str:
+    """Returns the appropriate line color based on risk prediction and probability."""
+    if pred == 1:
+        return _COLOR_RUBY
+    if prob >= 0.35:
+        return _COLOR_AMBER
+    return _COLOR_INDIGO
 
 
 def render_forecast_panel(
     analyst_id: str,
     scored_df: pd.DataFrame,
     risk_probabilities: np.ndarray,
-    risk_predictions: np.ndarray
+    risk_predictions: np.ndarray,
 ) -> None:
-    """Renders the machine learning fatigue risk forecast panel for the selected analyst.
+    """Renders the ML fatigue risk forecast for the focus analyst.
 
     Args:
-        analyst_id: The selected analyst ID.
-        scored_df: The scored DataFrame (same length as the predictions arrays).
-        risk_probabilities: Array of predicted probability of fatigue (AFI > 70).
-        risk_predictions: Array of binary predictions (0 or 1).
+        analyst_id: Focus analyst identifier.
+        scored_df: Full scored DataFrame aligned with predictions arrays.
+        risk_probabilities: Per-row probability of AFI > 70 (range 0–1).
+        risk_predictions: Per-row binary classification (0 = nominal, 1 = at-risk).
     """
-    st.markdown('<div class="section-header">Predictive Fatigue Forecast (ML)</div>', unsafe_allow_html=True)
-
-    # 1. Filter and prepare data
     analyst_mask = scored_df["analyst_id"] == analyst_id
     analyst_data = scored_df[analyst_mask].copy()
-    
+
     if analyst_data.empty or len(risk_probabilities) != len(scored_df):
         st.markdown(
-            '<p style="color: var(--text-secondary); font-size: 13px; font-style: italic;">'
-            'Predictive model requires baseline data. Run baseline calibration first.</p>',
-            unsafe_allow_html=True
+            """
+            <div class="forecast-wrap">
+              <div style="padding:24px; text-align:center; color:var(--text-muted);
+                          font-size:13px; font-weight:300;">
+                Predictive model requires calibrated baseline data.
+                Run <code>python scripts/run_full_pipeline.py</code> to generate forecasts.
+              </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
         return
 
-    # Add predictions to the local copy
     analyst_data["risk_prob"] = risk_probabilities[analyst_mask]
     analyst_data["risk_pred"] = risk_predictions[analyst_mask]
     analyst_data["closure_dt"] = pd.to_datetime(analyst_data["closure_timestamp"])
-    analyst_data = analyst_data.sort_values(by="closure_dt")
+    analyst_data = analyst_data.sort_values("closure_dt")
 
-    # Filter for active shift (last 8 hours)
-    max_time = analyst_data["closure_dt"].max()
+    max_time    = analyst_data["closure_dt"].max()
     shift_start = max_time - pd.Timedelta(hours=8)
-    shift_data = analyst_data[analyst_data["closure_dt"] >= shift_start].copy()
+    shift_data  = analyst_data[analyst_data["closure_dt"] >= shift_start].copy()
 
     if shift_data.empty:
-        st.warning("No recent shift data to generate ML forecast.")
+        st.warning("Insufficient shift data for ML forecast.")
         return
 
-    # 2. Display current risk metrics
-    latest_record = shift_data.iloc[-1]
-    curr_prob = float(latest_record["risk_prob"]) * 100.0
-    curr_pred = int(latest_record["risk_pred"])
+    latest    = shift_data.iloc[-1]
+    curr_prob = float(latest["risk_prob"])
+    curr_pred = int(latest["risk_pred"])
+    prob_pct  = curr_prob * 100.0
 
-    col1, col2 = st.columns([1, 2])
-    with col1:
-        st.metric(
-            label="Fatigue Probability",
-            value=f"{curr_prob:.1f}%",
-            delta="High Risk" if curr_pred == 1 else "Nominal Risk",
-            delta_color="inverse" if curr_pred == 1 else "normal"
-        )
-        
-    with col2:
-        if curr_pred == 1:
-            st.markdown(
-                '<div style="background-color: rgba(255, 68, 68, 0.1); border-left: 4px solid var(--state-critical); padding: 10px; border-radius: 4px; font-size: 12px; margin-top: 5px;">'
-                '<strong style="color: var(--state-critical);">[!] Proactive Alert:</strong> High likelihood of '
-                'fatigue crossing standard thresholds. Queue mitigation suggested.'
-                '</div>',
-                unsafe_allow_html=True
-            )
-        else:
-            st.markdown(
-                '<div style="background-color: rgba(63, 185, 80, 0.1); border-left: 4px solid var(--state-nominal); padding: 10px; border-radius: 4px; font-size: 12px; margin-top: 5px;">'
-                '<strong style="color: var(--state-nominal);">[i] Stable Trend:</strong> Model predicts low '
-                'fatigue risk for the upcoming alerts in the current cycle.'
-                '</div>',
-                unsafe_allow_html=True
-            )
-
-    # 3. Plot the rolling risk probability chart
-    bg_surface = "#161B22"
-    border_subtle = "#30363D"
-    chart_color = "#F78166" if curr_pred == 1 else "#58A6FF"
-    text_secondary = "#8B949E"
-    text_primary = "#E6EDF3"
-
-    fig, ax = plt.subplots(figsize=(10, 3), facecolor=bg_surface)
-    ax.set_facecolor(bg_surface)
-
-    # Plot rolling risk probability
-    ax.plot(
-        shift_data["closure_dt"],
-        shift_data["risk_prob"] * 100.0,
-        color=chart_color,
-        linewidth=2,
-        label="ML Forecasted Risk %"
+    # ── Risk metric block ───────────────────────────────────
+    risk_color  = _risk_color(curr_pred, curr_prob)
+    alert_bg    = "rgba(234, 34, 97, 0.10)"   if curr_pred == 1 else "rgba(0, 200, 150, 0.08)"
+    alert_border= _COLOR_RUBY                 if curr_pred == 1 else _COLOR_TEAL
+    alert_label = "Elevated Risk"             if curr_pred == 1 else "Nominal Risk"
+    alert_body  = (
+        "High probability of fatigue crossing threshold limits. "
+        "Queue rebalancing and workload redistribution recommended."
+        if curr_pred == 1
+        else
+        "Model projects low fatigue risk for upcoming alerts in the current shift cycle."
     )
 
-    # Threshold line at 50%
+    # Rolling window stats
+    n_at_risk  = int((shift_data["risk_pred"] == 1).sum())
+    total_recs = len(shift_data)
+    at_risk_pct = (n_at_risk / total_recs * 100.0) if total_recs > 0 else 0.0
+
+    st.markdown(
+        f"""
+        <div class="forecast-wrap">
+          <!-- Metric row -->
+          <div class="forecast-metric-row">
+            <div class="forecast-metric-primary">
+              <div class="forecast-metric-label">Fatigue Probability</div>
+              <div class="forecast-metric-value" style="color:{risk_color};">
+                {prob_pct:.1f}<span style="font-size:20px; color:var(--text-muted);">%</span>
+              </div>
+            </div>
+            <div class="forecast-metric-primary">
+              <div class="forecast-metric-label">At-Risk Intervals (shift)</div>
+              <div class="forecast-metric-value" style="color:var(--text-primary); font-size:28px;">
+                {n_at_risk}
+                <span style="font-size:13px; color:var(--text-muted);">/ {total_recs}</span>
+              </div>
+            </div>
+            <div class="forecast-metric-primary">
+              <div class="forecast-metric-label">At-Risk Exposure</div>
+              <div class="forecast-metric-value" style="color:var(--text-primary); font-size:28px;">
+                {at_risk_pct:.0f}<span style="font-size:16px; color:var(--text-muted);">%</span>
+              </div>
+            </div>
+            <!-- Alert box -->
+            <div class="forecast-alert-box" style="background:{alert_bg}; border-left:3px solid {alert_border};">
+              <div style="font-size:11px; font-weight:500; text-transform:uppercase;
+                          letter-spacing:0.6px; color:{alert_border}; margin-bottom:5px;">
+                {alert_label}
+              </div>
+              <div style="font-size:13px; font-weight:300; color:var(--text-secondary);">
+                {alert_body}
+              </div>
+            </div>
+          </div>
+          <!-- Chart rendered below via st.pyplot -->
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # ── Rolling probability chart ───────────────────────────
+    line_color = _risk_color(curr_pred, curr_prob)
+
+    fig, ax = plt.subplots(figsize=(11, 3.2), facecolor=_BG_SURFACE)
+    ax.set_facecolor(_BG_SURFACE)
+
+    x = shift_data["closure_dt"]
+    y = shift_data["risk_prob"] * 100.0
+
+    # Fill under the curve
+    ax.fill_between(x, y, alpha=0.08, color=line_color)
+
+    # Main line
+    ax.plot(x, y, color=line_color, linewidth=2.0, label="Predicted Risk Probability (%)")
+
+    # 50% classification threshold
     ax.axhline(
-        y=50.0,
-        color=text_secondary,
-        linestyle=":",
-        linewidth=1.2,
-        label="Risk Classification Threshold (50%)"
+        y=50.0, color=_TEXT_MUTED, linestyle="--", linewidth=1.0,
+        label="Classification threshold — 50%", alpha=0.6,
     )
 
-    # Title & Labels
-    ax.set_title("Rolling Fatigue Risk Probability Timeline", color=text_primary, fontsize=10, fontweight="bold", pad=10)
-    ax.tick_params(colors=text_secondary, labelsize=8)
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.spines["left"].set_color(border_subtle)
-    ax.spines["bottom"].set_color(border_subtle)
-    
-    # Format X-axis
-    ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: pd.to_datetime(x).strftime("%H:%M")))
-    ax.set_ylabel("Risk %", color=text_secondary, fontsize=8)
-    ax.grid(color=border_subtle, linestyle="-", linewidth=0.5, alpha=0.3)
-    ax.set_ylim(-5, 105)
+    ax.set_ylim(-2, 105)
+    ax.set_title(
+        f"Rolling Fatigue Risk Probability Timeline — {analyst_id}",
+        color=_TEXT_PRIMARY, fontsize=10, fontweight="normal",
+        fontfamily="monospace", pad=10,
+    )
+    ax.tick_params(colors=_TEXT_SEC, labelsize=8)
+    for spine in ax.spines.values():
+        spine.set_visible(False)
+    ax.spines["bottom"].set_visible(True)
+    ax.spines["bottom"].set_color(_BORDER)
 
-    # Legend
+    ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
+    ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+    ax.set_ylabel("Risk %", color=_TEXT_MUTED, fontsize=8)
+    ax.grid(axis="y", color=_BORDER, linestyle="-", linewidth=0.5, alpha=0.4)
+    ax.grid(axis="x", visible=False)
+
     legend = ax.legend(
-        loc="lower left",
-        facecolor=bg_surface,
-        edgecolor=border_subtle,
-        fontsize=8
+        loc="upper left", facecolor=_BG_ELEVATED,
+        edgecolor=_BORDER, fontsize=8, framealpha=1,
     )
-    for text in legend.get_texts():
-        text.set_color(text_primary)
+    for txt in legend.get_texts():
+        txt.set_color(_TEXT_SEC)
 
+    plt.tight_layout(pad=0.5)
     st.pyplot(fig)
     plt.close(fig)
