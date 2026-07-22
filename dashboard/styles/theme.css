@@ -1,60 +1,48 @@
 /* ============================================================
-   Stripi-inspired Premium Design Language — Streamlit Dashboard Theme
-   High-end Dark Mode with Glassmorphism, Micro-Glow, and Modern Typography
+   Enterprise SIEM / SOAR Command Center Theme
+   Inspired by Splunk ES, Microsoft Sentinel, & Cortex XSOAR
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap');
 
 :root {
-  /* Brand Palette */
-  --color-primary:            #533afd;   /* Stripi Indigo */
-  --color-primary-deep:       #4434d4;
-  --color-primary-press:      #2e2b8c;
-  --color-primary-soft:       #665efd;
-  --color-primary-subdued:    #b9b9f9;
-  --color-brand-dark:         #121638;   /* Deeper Navy */
-  --color-ruby:               #ea2261;
-  --color-magenta:            #f96bee;
+  /* SIEM Command Dark Palette */
+  --bg-primary:               #070a14;   /* Deep Space Security Dark */
+  --bg-surface:               rgba(18, 24, 48, 0.85);
+  --bg-surface-solid:         #10162e;
+  --bg-elevated:              #182042;
+  --bg-input:                 #0d1226;
 
-  /* Surfaces & Dark Glass */
-  --bg-primary:               #090d1a;   /* Rich Ultra-Dark Ink */
-  --bg-surface:               rgba(22, 27, 60, 0.75); /* Glass card */
-  --bg-surface-solid:         #141936;
-  --bg-elevated:              #1f264e;
-  --bg-input:                 #141936;
-
-  /* Hairlines & Borders */
-  --border-subtle:            rgba(255, 255, 255, 0.08);
-  --border-strong:            rgba(255, 255, 255, 0.16);
-  --border-active:            #665efd;
+  /* Borders & Grid lines */
+  --border-subtle:            rgba(255, 255, 255, 0.09);
+  --border-strong:            rgba(255, 255, 255, 0.18);
+  --border-active:            #635bff;
 
   /* Text Colors */
   --text-primary:             #f8fafc;
   --text-secondary:           #94a3b8;
   --text-muted:               #64748b;
 
-  /* Severity Scale (Vibrant Neon Soft) */
-  --state-nominal:            #10b981;   /* Emerald */
+  /* Severity Scale */
+  --state-nominal:            #10b981;   /* Emerald Green */
   --state-elevated:           #f59e0b;   /* Amber */
-  --state-high:               #f43f5e;   /* Coral Red */
-  --state-critical:           #f43f5e;   /* Ruby Red */
+  --state-high:               #f97316;   /* Neon Orange */
+  --state-critical:           #ef4444;   /* Red Signal */
 
-  /* Border Radii */
+  /* Radii */
   --radius-xs:                4px;
   --radius-sm:                6px;
-  --radius-md:                10px;
-  --radius-lg:                14px;
-  --radius-xl:                20px;
+  --radius-md:                8px;
+  --radius-lg:                12px;
+  --radius-xl:                16px;
   --radius-pill:              9999px;
 
-  /* Elevation & Shadows */
-  --shadow-card:              0 4px 20px rgba(0, 0, 0, 0.35);
-  --shadow-hover:             0 12px 32px rgba(83, 58, 253, 0.25);
-  --shadow-glow-nominal:      0 0 16px rgba(16, 185, 129, 0.25);
-  --shadow-glow-critical:     0 0 16px rgba(244, 63, 94, 0.3);
+  /* Shadows */
+  --shadow-card:              0 4px 18px rgba(0, 0, 0, 0.45);
+  --shadow-hover:             0 8px 28px rgba(99, 91, 255, 0.22);
 }
 
-/* ── Reset & Typography ── */
+/* ── Reset & Global Typography ── */
 html, body, [class*="css"] {
   font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
   font-weight: 300 !important;
@@ -63,17 +51,16 @@ html, body, [class*="css"] {
   font-feature-settings: "ss01" 1, "cv05" 1 !important;
 }
 
-/* ── App Shell Radial Backdrop ── */
+/* ── App Shell Backdrop ── */
 .stApp {
   background-color: var(--bg-primary) !important;
   background-image:
-    radial-gradient(ellipse 90% 60% at 15% 0%, rgba(83, 58, 253, 0.22) 0%, transparent 65%),
-    radial-gradient(ellipse 70% 50% at 85% 0%, rgba(249, 107, 238, 0.12) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(16, 185, 129, 0.05) 0%, transparent 50%) !important;
+    radial-gradient(ellipse 100% 50% at 20% 0%, rgba(99, 91, 253, 0.18) 0%, transparent 70%),
+    radial-gradient(ellipse 80% 40% at 85% 0%, rgba(16, 185, 129, 0.08) 0%, transparent 60%) !important;
   background-attachment: fixed !important;
 }
 
-/* ── Monospace Tabular Figures ── */
+/* ── Monospace Figures ── */
 .mono, code, pre, .monospace-val {
   font-family: 'JetBrains Mono', monospace !important;
   font-feature-settings: "tnum" 1 !important;
@@ -81,61 +68,69 @@ html, body, [class*="css"] {
 }
 
 /* ══════════════════════════════════════════════
-   HEADER BAR
+   SIEM SOC COMMAND HEADER
 ══════════════════════════════════════════════ */
-.afq-header {
-  padding: 24px 30px;
-  background: rgba(18, 22, 56, 0.85);
+.siem-header {
+  padding: 22px 28px;
+  background: rgba(16, 22, 46, 0.9);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-strong);
-  border-radius: var(--radius-xl);
-  margin-bottom: 24px;
+  border-radius: var(--radius-lg);
+  margin-bottom: 20px;
   box-shadow: var(--shadow-card);
   position: relative;
-  overflow: hidden;
 }
 
-/* Glowing top accent line */
-.afq-header::after {
+.siem-header::after {
   content: '';
   position: absolute;
-  top: 0; left: 0; right: 0; height: 3px;
-  background: linear-gradient(90deg, #533afd 0%, #f96bee 50%, #10b981 100%);
+  top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, #635bff 0%, #00d4ff 50%, #10b981 100%);
 }
 
-.afq-header-title {
-  font-size: 26px !important;
-  font-weight: 400 !important;
-  letter-spacing: -0.8px !important;
+.siem-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  color: #818cf8;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.siem-title {
+  font-size: 24px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.6px !important;
   color: #ffffff !important;
-  margin: 0 0 4px 0 !important;
-  line-height: 1.1 !important;
+  margin: 0 !important;
 }
 
-.afq-header-subtitle {
+.siem-subtitle {
   font-size: 13px;
-  font-weight: 300;
   color: var(--text-secondary);
-  margin: 0;
-  line-height: 1.4;
+  margin-top: 4px;
+  font-weight: 300;
 }
 
-.afq-header-live {
+/* Status Indicator Pill */
+.siem-status-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   font-weight: 600;
-  color: var(--state-nominal);
-  background: rgba(16, 185, 129, 0.12);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  border-radius: var(--radius-pill);
-  padding: 4px 10px;
   letter-spacing: 0.8px;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--state-nominal);
+  border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
-.afq-header-live::before {
+.siem-status-pill::before {
   content: '';
   width: 6px; height: 6px;
   background: var(--state-nominal);
@@ -146,39 +141,89 @@ html, body, [class*="css"] {
 
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(0.85); }
+  50% { opacity: 0.35; transform: scale(0.85); }
+}
+
+/* ══════════════════════════════════════════════
+   SIEM KPI METRIC RIBBON (4-Col Strip)
+══════════════════════════════════════════════ */
+.siem-kpi-ribbon {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.siem-kpi-card {
+  background: rgba(16, 22, 46, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  box-shadow: var(--shadow-card);
+  transition: all 0.2s ease;
+}
+
+.siem-kpi-card:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+
+.siem-kpi-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.siem-kpi-val {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: -1px;
+  line-height: 1;
+  color: var(--text-primary);
+  font-feature-settings: "tnum" 1;
+}
+
+.siem-kpi-sub {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 6px;
+  font-weight: 300;
 }
 
 /* ══════════════════════════════════════════════
    SECTION LABELS
 ══════════════════════════════════════════════ */
 .section-label {
+  font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 1.5px;
-  color: var(--text-secondary);
+  color: #818cf8;
   margin: 24px 0 14px 0;
   padding-left: 10px;
-  border-left: 3px solid var(--color-primary-soft);
+  border-left: 3px solid #635bff;
   display: block;
 }
 
 /* ══════════════════════════════════════════════
-   ANALYST CARDS (Glassmorphism + Subtle Glow)
+   ANALYST CONSOLE CARDS
 ══════════════════════════════════════════════ */
 .analyst-card {
-  background: rgba(20, 25, 54, 0.8);
+  background: rgba(16, 22, 46, 0.85);
   backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  padding: 20px;
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
   margin-bottom: 14px;
   box-shadow: var(--shadow-card);
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  position: relative;
-  overflow: hidden;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .analyst-card:hover {
@@ -192,77 +237,62 @@ html, body, [class*="css"] {
 .card-high     { border-left: 3px solid var(--state-high)     !important; }
 .card-critical { border-left: 3px solid var(--state-critical) !important; }
 
-/* Progress bar */
 .afq-progress-track {
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-pill);
-  height: 6px;
+  height: 5px;
   width: 100%;
-  margin: 12px 0 14px;
+  margin: 10px 0 12px;
   overflow: hidden;
 }
 
 .afq-progress-fill {
   height: 100%;
   border-radius: var(--radius-pill);
-  transition: width 0.5s ease-out;
+  transition: width 0.4s ease-out;
 }
 
 /* ══════════════════════════════════════════════
-   BADGES (Pill Soft Neon)
+   BADGES
 ══════════════════════════════════════════════ */
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: 3px 10px;
+  padding: 3px 9px;
   border-radius: var(--radius-pill);
+  font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
-  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.6px;
 }
 
 .badge-nominal   { background: rgba(16, 185, 129, 0.12); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
 .badge-elevated  { background: rgba(245, 158, 11, 0.12); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
-.badge-high      { background: rgba(244, 63, 94, 0.12);  color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.3); }
-.badge-critical  { background: rgba(244, 63, 94, 0.16);  color: #f43f5e; border: 1px solid rgba(244, 63, 94, 0.4); }
+.badge-high      { background: rgba(249, 115, 22, 0.12); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.3); }
+.badge-critical  { background: rgba(239, 68, 68, 0.16);  color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); }
 
 /* ══════════════════════════════════════════════
-   RECOMMENDATION PANEL
+   CONTAINERS & TABLES
 ══════════════════════════════════════════════ */
-.recommendation-container {
-  background: rgba(20, 25, 54, 0.8);
+.recommendation-container, .anomaly-table-wrap, .forecast-wrap {
+  background: rgba(16, 22, 46, 0.85);
   backdrop-filter: blur(12px);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  box-shadow: var(--shadow-card);
-}
-
-/* ══════════════════════════════════════════════
-   TABLE & CONTAINER WRAPPERS
-══════════════════════════════════════════════ */
-.anomaly-table-wrap, .forecast-wrap {
-  background: rgba(20, 25, 54, 0.8);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
   margin-bottom: 20px;
 }
 
-.forecast-wrap {
-  padding: 24px;
-}
+.recommendation-container { padding: 20px; }
+.forecast-wrap { padding: 22px; }
 
 .forecast-metric-row {
   display: flex;
   align-items: flex-end;
   gap: 24px;
-  margin-bottom: 20px;
-  padding-bottom: 18px;
+  margin-bottom: 18px;
+  padding-bottom: 16px;
   border-bottom: 1px solid var(--border-subtle);
 }
 
@@ -273,6 +303,7 @@ html, body, [class*="css"] {
 }
 
 .forecast-metric-label {
+  font-family: 'JetBrains Mono', monospace;
   font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
@@ -281,56 +312,48 @@ html, body, [class*="css"] {
 }
 
 .forecast-metric-value {
-  font-size: 42px;
-  font-weight: 300;
-  letter-spacing: -1.2px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 38px;
+  font-weight: 500;
+  letter-spacing: -1px;
   line-height: 1;
   font-feature-settings: "tnum" 1;
 }
 
 .forecast-alert-box {
   flex: 1;
-  padding: 14px 18px;
-  border-radius: var(--radius-md);
-  font-size: 13px;
-  font-weight: 300;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
   line-height: 1.5;
 }
 
 /* ══════════════════════════════════════════════
-   STREAMLIT WIDGET STYLING
+   STREAMLIT WIDGET OVERRIDES
 ══════════════════════════════════════════════ */
-/* Selectbox / Multiselect */
 div[data-baseweb="select"] > div {
-  background-color: rgba(20, 25, 54, 0.9) !important;
+  background-color: rgba(13, 18, 38, 0.9) !important;
   border: 1px solid var(--border-strong) !important;
   border-radius: var(--radius-sm) !important;
   color: var(--text-primary) !important;
 }
 
-/* Tabs */
 .stTabs [data-baseweb="tab-list"] {
   background-color: transparent !important;
   border-bottom: 1px solid var(--border-subtle) !important;
-  gap: 6px;
+  gap: 4px;
 }
 
 .stTabs [data-baseweb="tab"] {
+  font-family: 'JetBrains Mono', monospace !important;
   color: var(--text-secondary) !important;
-  font-size: 13px !important;
-  font-weight: 400 !important;
+  font-size: 12px !important;
   border-radius: var(--radius-sm) var(--radius-sm) 0 0 !important;
-  padding: 8px 16px !important;
+  padding: 8px 14px !important;
 }
 
 .stTabs [aria-selected="true"] {
   color: #ffffff !important;
-  font-weight: 500 !important;
-  border-bottom: 2px solid var(--color-primary-soft) !important;
-  background: rgba(83, 58, 253, 0.15) !important;
+  border-bottom: 2px solid #635bff !important;
+  background: rgba(99, 91, 255, 0.15) !important;
 }
-
-/* Scrollbars */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 3px; }
