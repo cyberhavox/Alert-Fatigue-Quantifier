@@ -156,9 +156,12 @@ def main() -> None:
     mean_triage = shift_df["triage_interval"].mean() if not shift_df.empty else 0.0
     anom_count = len(anomalies_df)
 
-    # Calculate Live False Positive Rate (dismissed / total)
-    dismissed_count = len(shift_df[shift_df["closure_type"] == "dismissed"])
-    live_fp_rate = (dismissed_count / total_logs * 100.0) if total_logs > 0 else 80.0
+    # Calculate Live False Positive Rate (dismissed / total) safely
+    if "closure_type" in shift_df.columns:
+        dismissed_count = len(shift_df[shift_df["closure_type"] == "dismissed"])
+        live_fp_rate = (dismissed_count / total_logs * 100.0) if total_logs > 0 else 80.0
+    else:
+        live_fp_rate = (shift_df["uninvestigated_closures"].mean() * 100.0) if not shift_df.empty else 80.0
 
     # Calculate Live Mean Enrichment Depth
     live_enrich_depth = shift_df["enrichment_depth"].mean() if not shift_df.empty else 6.0
