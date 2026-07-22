@@ -43,8 +43,8 @@ def main() -> None:
         print("Error: No raw CSV logs found in data/raw/.")
         sys.exit(1)
         
-    raw_path = csv_files[0]
-    print(f"[1/7] Loading raw logs from: {raw_path}")
+    raw_path = sorted(csv_files)[-1]
+    print(f"[1/7] Loading latest raw logs from: {raw_path}")
     
     # 2. Ingest and Validate
     df = parse_log_file(raw_path)
