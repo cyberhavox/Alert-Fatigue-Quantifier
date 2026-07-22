@@ -52,3 +52,9 @@ node_modules/
 # Temp/scratch
 *.pkl
 data/models/*.pkl
+
+# Project documents — not needed on GitHub
+docs/
+DESIGN.md
+*.pdf
+CLOUD_STARTUP.md
