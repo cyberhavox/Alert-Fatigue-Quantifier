@@ -1,7 +1,7 @@
 """Degradation Anomaly Audit Log component.
 
-Renders a high-contrast clean table matching Microsoft Sentinel & Log360 Cloud design.
-Zero emojis, clean typography.
+Renders a high-contrast clean table matching Microsoft Sentinel Dark & LogRhythm design.
+Zero emojis, clean SIEM monospace log formatting.
 """
 
 from __future__ import annotations
@@ -9,10 +9,10 @@ import pandas as pd
 import streamlit as st
 
 _STATE_STYLES: dict[str, tuple[str, str, str]] = {
-    "CRITICAL": ("#991b1b", "#fef2f2", "#fca5a5"),
-    "HIGH":     ("#b91c1c", "#fef2f2", "#fecaca"),
-    "ELEVATED": ("#b45309", "#fffbeb", "#fde68a"),
-    "NOMINAL":  ("#047857", "#ecfdf5", "#a7f3d0"),
+    "CRITICAL": ("#f87171", "rgba(220, 38, 38, 0.2)", "rgba(220, 38, 38, 0.4)"),
+    "HIGH":     ("#ef4444", "rgba(239, 68, 68, 0.15)", "rgba(239, 68, 68, 0.3)"),
+    "ELEVATED": ("#f59e0b", "rgba(245, 158, 11, 0.15)", "rgba(245, 158, 11, 0.3)"),
+    "NOMINAL":  ("#10b981", "rgba(16, 185, 129, 0.15)", "rgba(16, 185, 129, 0.3)"),
 }
 
 _COLUMNS = ["Timestamp", "Analyst", "Signal", "Deviation", "p-value", "State"]
@@ -24,7 +24,7 @@ def _clean_html(raw_html: str) -> str:
 
 
 def _state_badge(state: str) -> str:
-    color, bg, border = _STATE_STYLES.get(state, ("#334155", "#f1f5f9", "#cbd5e1"))
+    color, bg, border = _STATE_STYLES.get(state, ("#9ca3af", "#1f2937", "#374151"))
     return (
         f'<span style="display:inline-block; padding:3px 9px; border-radius:4px; '
         f'font-size:11px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; '
@@ -38,8 +38,8 @@ def render_anomaly_log(anomalies_df: pd.DataFrame) -> None:
     if anomalies_df.empty:
         html = _clean_html("""
             <div class="anomaly-table-wrap">
-              <div style="padding:24px 20px; text-align:center; color:#64748b; font-size:13px;">
-                No operational degradation anomalies detected in active monitoring window.
+              <div style="padding:24px 20px; text-align:center; color:#9ca3af; font-size:13px;">
+                No operational degradation anomalies detected in active telemetry window.
               </div>
             </div>
         """)
@@ -55,7 +55,7 @@ def render_anomaly_log(anomalies_df: pd.DataFrame) -> None:
     for _, row in display_df.iterrows():
         state = str(row.get("State", "")).upper()
         color, bg, border = _STATE_STYLES.get(
-            state, ("#334155", "#f1f5f9", "#cbd5e1")
+            state, ("#9ca3af", "#1f2937", "#374151")
         )
         deviation = row.get("Deviation", 0)
         pvalue    = row.get("p-value", 0)
@@ -69,25 +69,25 @@ def render_anomaly_log(anomalies_df: pd.DataFrame) -> None:
             pvalue_str = str(pvalue)
 
         row_item = f"""
-        <div style="display:grid; grid-template-columns:180px 120px 1fr 130px 110px 110px; padding:10px 16px; gap:10px; border-bottom:1px solid #e2e8f0; align-items:center; background:#ffffff; border-left:4px solid {color};">
-          <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:#475569;">{row.get("Timestamp", "—")}</span>
-          <span style="font-family:'JetBrains Mono',monospace; font-size:13px; color:#0f172a; font-weight:600;">{row.get("Analyst", "—")}</span>
-          <span style="font-family:'Inter',sans-serif; font-size:13px; color:#0f172a;">{row.get("Signal", "—")}</span>
+        <div style="display:grid; grid-template-columns:180px 120px 1fr 130px 110px 110px; padding:10px 16px; gap:10px; border-bottom:1px solid #1f2937; align-items:center; background:#111827; border-left:4px solid {color};">
+          <span style="font-family:'JetBrains Mono',monospace; font-size:12px; color:#9ca3af;">{row.get("Timestamp", "—")}</span>
+          <span style="font-family:'JetBrains Mono',monospace; font-size:13px; color:#f9fafb; font-weight:600;">{row.get("Analyst", "—")}</span>
+          <span style="font-family:'Inter',sans-serif; font-size:13px; color:#f9fafb;">{row.get("Signal", "—")}</span>
           <span style="font-family:'JetBrains Mono',monospace; font-size:13px; color:{color}; font-weight:700;">{deviation_str}</span>
-          <span style="font-family:'JetBrains Mono',monospace; font-size:13px; color:#475569;">{pvalue_str}</span>
+          <span style="font-family:'JetBrains Mono',monospace; font-size:13px; color:#9ca3af;">{pvalue_str}</span>
           <div>{_state_badge(state)}</div>
         </div>
         """
         rows_html += _clean_html(row_item)
 
     col_header = _clean_html("""
-    <div style="display:grid; grid-template-columns:180px 120px 1fr 130px 110px 110px; padding:10px 16px; gap:10px; background:#f1f5f9; border-bottom:1px solid #cbd5e1;">
-      <span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#0f172a;">Timestamp</span>
-      <span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#0f172a;">Analyst</span>
-      <span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#0f172a;">Degradation Signal</span>
-      <span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#0f172a;">Deviation (z)</span>
-      <span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#0f172a;">p-value</span>
-      <span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#0f172a;">Severity</span>
+    <div style="display:grid; grid-template-columns:180px 120px 1fr 130px 110px 110px; padding:10px 16px; gap:10px; background:#1f2937; border-bottom:1px solid #374151;">
+      <span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#f9fafb;">Timestamp</span>
+      <span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#f9fafb;">Analyst Node</span>
+      <span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#f9fafb;">Degradation Telemetry Signal</span>
+      <span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#f9fafb;">Deviation (z)</span>
+      <span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#f9fafb;">p-value</span>
+      <span style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:#f9fafb;">Severity</span>
     </div>
     """)
 
@@ -95,9 +95,9 @@ def render_anomaly_log(anomalies_df: pd.DataFrame) -> None:
 
     full_table = f"""
     <div class="anomaly-table-wrap">
-      <div style="padding:12px 16px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; background:#ffffff;">
-        <span style="font-size:14px; font-weight:600; color:#0f172a;">Flagged Decision Degradation Events</span>
-        <span style="font-size:12px; color:#64748b; font-family:'JetBrains Mono',monospace;">{count_label}</span>
+      <div style="padding:12px 16px; border-bottom:1px solid #1f2937; display:flex; justify-content:space-between; align-items:center; background:#111827;">
+        <span style="font-size:13px; font-weight:600; color:#f9fafb; font-family:'Inter',sans-serif;">Flagged Decision Degradation Events (Mann-Whitney U Test)</span>
+        <span style="font-size:12px; color:#9ca3af; font-family:'JetBrains Mono',monospace;">{count_label}</span>
       </div>
       {col_header}
       {rows_html}

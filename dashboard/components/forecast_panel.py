@@ -1,7 +1,7 @@
 """Predictive Fatigue Risk Forecast panel.
 
 Renders ML-derived fatigue risk metrics and rolling probability timeline chart.
-Uses high-contrast clean HTML metrics and Matplotlib plot matching Light Slate theme.
+Uses high-contrast clean HTML metrics and Matplotlib plot matching SIEM Dark theme.
 Zero emojis, plain engineering voice.
 """
 
@@ -14,15 +14,15 @@ import pandas as pd
 import numpy as np
 import streamlit as st
 
-_BG_SURFACE   = "#ffffff"   # Pure White Card
-_BORDER       = "#e2e8f0"   # Light Slate Border
-_TEXT_PRIMARY = "#0f172a"   # Dark Slate Text
-_TEXT_MUTED   = "#64748b"   # Medium Slate
-_TEXT_SEC     = "#475569"   # Slate Text
-_COLOR_BLUE   = "#2563eb"   # Blue 600
-_COLOR_RED    = "#dc2626"   # Red 600
-_COLOR_AMBER  = "#d97706"   # Amber 600
-_COLOR_EMERALD= "#059669"   # Emerald 600
+_BG_SURFACE   = "#111827"   # Slate 900 Card Surface
+_BORDER       = "#1f2937"   # Dark Steel Border
+_TEXT_PRIMARY = "#f9fafb"   # Crisp White Text
+_TEXT_MUTED   = "#6b7280"   # Medium Gray
+_TEXT_SEC     = "#9ca3af"   # Light Slate Text
+_COLOR_BLUE   = "#3b82f6"   # Sentinel Blue
+_COLOR_RED    = "#ef4444"   # Red 500
+_COLOR_AMBER  = "#f59e0b"   # Amber 500
+_COLOR_EMERALD= "#10b981"   # Emerald 500
 
 
 def _clean_html(raw_html: str) -> str:
@@ -51,8 +51,8 @@ def render_forecast_panel(
     if analyst_data.empty or len(risk_probabilities) != len(scored_df):
         html = _clean_html("""
             <div class="forecast-wrap">
-              <div style="padding:24px; text-align:center; color:#64748b; font-size:13px;">
-                Predictive model requires calibrated baseline data. Run <code>python scripts/run_full_pipeline.py</code>.
+              <div style="padding:24px; text-align:center; color:#9ca3af; font-size:13px;">
+                Predictive model requires calibrated baseline data. Execute <code>python scripts/run_full_pipeline.py</code>.
               </div>
             </div>
         """)
@@ -78,9 +78,9 @@ def render_forecast_panel(
     prob_pct  = curr_prob * 100.0
 
     risk_color  = _risk_color(curr_pred, curr_prob)
-    alert_bg    = "#fef2f2" if curr_pred == 1 else "#ecfdf5"
+    alert_bg    = "rgba(239, 68, 68, 0.12)" if curr_pred == 1 else "rgba(16, 185, 129, 0.12)"
     alert_border= _COLOR_RED if curr_pred == 1 else _COLOR_EMERALD
-    alert_label = "ELEVATED FATIGUE RISK" if curr_pred == 1 else "NOMINAL FATIGUE RISK"
+    alert_label = "ELEVATED FATIGUE RISK PREDICTED" if curr_pred == 1 else "NOMINAL FATIGUE RISK FORECAST"
     alert_body  = (
         "High probability of fatigue crossing threshold limits. Queue rebalancing recommended."
         if curr_pred == 1
@@ -97,19 +97,19 @@ def render_forecast_panel(
       <div class="forecast-metric-row">
         <div class="forecast-metric-primary">
           <div class="forecast-metric-label">Predicted Risk Probability</div>
-          <div class="forecast-metric-value" style="color:{risk_color};">{prob_pct:.1f}<span style="font-size:20px; color:#64748b;">%</span></div>
+          <div class="forecast-metric-value" style="color:{risk_color};">{prob_pct:.1f}<span style="font-size:20px; color:#9ca3af;">%</span></div>
         </div>
         <div class="forecast-metric-primary">
           <div class="forecast-metric-label">At-Risk Intervals (Shift)</div>
-          <div class="forecast-metric-value" style="color:#0f172a; font-size:32px;">{n_at_risk}<span style="font-size:14px; color:#64748b;"> / {total_recs}</span></div>
+          <div class="forecast-metric-value" style="color:#f9fafb; font-size:32px;">{n_at_risk}<span style="font-size:14px; color:#9ca3af;"> / {total_recs}</span></div>
         </div>
         <div class="forecast-metric-primary">
           <div class="forecast-metric-label">At-Risk Exposure Ratio</div>
-          <div class="forecast-metric-value" style="color:#0f172a; font-size:32px;">{at_risk_pct:.0f}<span style="font-size:18px; color:#64748b;">%</span></div>
+          <div class="forecast-metric-value" style="color:#f9fafb; font-size:32px;">{at_risk_pct:.0f}<span style="font-size:18px; color:#9ca3af;">%</span></div>
         </div>
         <div class="forecast-alert-box" style="background:{alert_bg}; border:1px solid {alert_border}; border-left:4px solid {alert_border};">
           <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:{alert_border}; margin-bottom:6px;">{alert_label}</div>
-          <div style="font-size:13px; color:#0f172a;">{alert_body}</div>
+          <div style="font-size:13px; color:#f9fafb;">{alert_body}</div>
         </div>
       </div>
     </div>
@@ -124,7 +124,7 @@ def render_forecast_panel(
     x = shift_data["closure_dt"]
     y = shift_data["risk_prob"] * 100.0
 
-    ax.fill_between(x, y, alpha=0.08, color=line_color)
+    ax.fill_between(x, y, alpha=0.10, color=line_color)
     ax.plot(x, y, color=line_color, linewidth=2.2, label="Predicted Risk Probability (%)")
     ax.axhline(y=50.0, color=_TEXT_SEC, linestyle="--", linewidth=1.2, label="Classification Threshold (50%)", alpha=0.85)
 

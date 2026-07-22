@@ -1,54 +1,50 @@
 /* ============================================================
-   Alert Fatigue Quantifier (AFQ) — Enterprise SOC Dashboard Theme
-   Inspired by Microsoft Sentinel, ManageEngine Log360 Cloud & NGT SOC
-   Clean, light-slate background, crisp high contrast typography,
-   structured grid layout, zero clutter.
+   Alert Fatigue Quantifier (AFQ) — Professional SIEM / SOAR Theme
+   Inspired by Microsoft Sentinel Dark, LogRhythm, Log360 & Cortex XSOAR
+   Ultra-high density, crisp slate-steel theme, high readability,
+   zero clutter, enterprise SOC Command Center styling.
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
-  /* Microsoft Sentinel / Log360 Clean Light Palette */
-  --bg-primary:               #f1f5f9;   /* Slate 100 Background */
-  --bg-surface:               #ffffff;   /* Crisp White Card */
-  --bg-elevated:              #e2e8f0;   /* Slate 200 Hover */
-  --bg-header:                #ffffff;
+  /* Slate & Steel Executive Dark Theme */
+  --bg-primary:               #0b0f19;   /* Deep Slate-Black Background */
+  --bg-surface:               #111827;   /* Slate 900 Card Surface */
+  --bg-elevated:              #1f2937;   /* Slate 800 Elevated Container */
+  --bg-header:                #111827;
 
-  /* Borders & Dividers */
-  --border-subtle:            #e2e8f0;   /* Slate 200 Border */
-  --border-strong:            #cbd5e1;   /* Slate 300 Border */
-  --border-active:            #2563eb;   /* Blue 600 Accent */
+  /* Borders & Grids */
+  --border-subtle:            #1f2937;   /* Dark Steel Border */
+  --border-strong:            #374151;   /* Medium Steel Border */
+  --border-active:            #3b82f6;   /* Blue Accent Border */
 
-  /* Text Colors (High Contrast Readability) */
-  --text-primary:             #0f172a;   /* Slate 900 (Dark Slate) */
-  --text-secondary:           #475569;   /* Slate 600 (Medium Slate) */
-  --text-muted:               #64748b;   /* Slate 500 */
+  /* Text Readability (High Contrast) */
+  --text-primary:             #f9fafb;   /* Pure White */
+  --text-secondary:           #9ca3af;   /* Light Slate */
+  --text-muted:               #6b7280;   /* Medium Gray */
 
-  /* SOC Status Colors */
-  --state-nominal:            #059669;   /* Emerald 600 */
-  --state-elevated:           #d97706;   /* Amber 600 */
-  --state-high:               #dc2626;   /* Red 600 */
-  --state-critical:           #b91c1c;   /* Red 700 */
+  /* SOC Status Accents */
+  --state-nominal:            #10b981;   /* Emerald 500 */
+  --state-elevated:           #f59e0b;   /* Amber 500 */
+  --state-high:               #ef4444;   /* Red 500 */
+  --state-critical:           #dc2626;   /* Red 600 */
 
-  /* Accents */
-  --accent-blue:              #2563eb;   /* Blue 600 */
-  --accent-cyan:              #0284c7;   /* Sky 600 */
-  --accent-purple:            #7c3aed;   /* Violet 600 */
+  /* SIEM Brand Accents */
+  --accent-blue:              #3b82f6;   /* Sentinel Blue */
+  --accent-cyan:              #06b6d4;   /* Cyan 500 */
+  --accent-indigo:            #6366f1;   /* Indigo 500 */
 
-  /* Radii */
+  /* Card Radius & Shadows */
   --radius-xs:                4px;
   --radius-sm:                6px;
   --radius-md:                8px;
-  --radius-lg:                10px;
-  --radius-pill:              9999px;
-
-  /* Shadows */
-  --shadow-card:              0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+  --shadow-card:              0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.18);
 }
 
-/* ── Streamlit Container Overrides ── */
+/* ── Global Page Overrides ── */
 .block-container {
-  padding-top: 1.2rem !important;
+  padding-top: 1rem !important;
   padding-bottom: 2rem !important;
   max-width: 98% !important;
 }
@@ -57,7 +53,7 @@ html, body, [class*="css"] {
   font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
   background-color: var(--bg-primary) !important;
   color: var(--text-primary) !important;
-  font-size: 14px !important;
+  font-size: 13.5px !important;
 }
 
 header[data-testid="stHeader"] {
@@ -68,52 +64,53 @@ header[data-testid="stHeader"] {
   background-color: var(--bg-primary) !important;
 }
 
-/* Monospace text */
+/* Monospace Values */
 .mono, code, pre, .monospace-val {
   font-family: 'JetBrains Mono', monospace !important;
   font-feature-settings: "tnum" 1 !important;
 }
 
 /* ══════════════════════════════════════════════
-   HEADER BAR (Sentinel / Log360 Clean Header)
+   SIEM ENTERPRISE TOP HEADER BAR
 ══════════════════════════════════════════════ */
-.afq-header {
+.siem-header {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 16px 24px;
-  margin-bottom: 18px;
+  padding: 14px 20px;
+  margin-bottom: 16px;
   box-shadow: var(--shadow-card);
 }
 
-.afq-header-title {
-  font-size: 20px !important;
+.siem-title {
+  font-size: 18px !important;
   font-weight: 700 !important;
   color: var(--text-primary) !important;
-  letter-spacing: -0.3px !important;
-  margin: 0 0 2px 0 !important;
+  letter-spacing: -0.2px !important;
+  margin: 0 !important;
 }
 
-.afq-header-subtitle {
-  font-size: 13px;
+.siem-subtitle {
+  font-size: 12px;
   color: var(--text-secondary);
-  margin: 0;
+  margin-top: 2px;
 }
 
-.afq-header-live {
+.siem-status-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   font-size: 11px;
   font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
   color: var(--state-nominal);
-  background: #ecfdf5;
-  border: 1px solid #a7f3d0;
-  border-radius: var(--radius-pill);
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 4px;
   padding: 4px 10px;
 }
 
-.afq-header-live::before {
+.siem-status-pill::before {
   content: '';
   width: 6px; height: 6px;
   background: var(--state-nominal);
@@ -121,17 +118,17 @@ header[data-testid="stHeader"] {
 }
 
 /* ══════════════════════════════════════════════
-   TOP KPI CARDS (Sentinel Style KPI Tiles)
+   SIEM TOP KPI TILES
 ══════════════════════════════════════════════ */
-.kpi-card {
+.siem-kpi-card {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 16px 18px;
+  padding: 14px 16px;
   box-shadow: var(--shadow-card);
 }
 
-.kpi-label {
+.siem-kpi-label {
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
@@ -140,16 +137,16 @@ header[data-testid="stHeader"] {
   margin-bottom: 4px;
 }
 
-.kpi-value {
+.siem-kpi-val {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 30px;
+  font-size: 26px;
   font-weight: 700;
-  line-height: 1;
+  line-height: 1.1;
   color: var(--text-primary);
 }
 
-.kpi-sub {
-  font-size: 12px;
+.siem-kpi-sub {
+  font-size: 11px;
   color: var(--text-muted);
   margin-top: 4px;
 }
@@ -158,26 +155,26 @@ header[data-testid="stHeader"] {
    SECTION LABELS
 ══════════════════════════════════════════════ */
 .section-label {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.6px;
   color: var(--text-primary);
-  margin: 20px 0 12px 0;
+  margin: 18px 0 10px 0;
   padding-left: 8px;
   border-left: 3px solid var(--accent-blue);
   display: block;
 }
 
 /* ══════════════════════════════════════════════
-   ANALYST ROSTER CARDS
+   ANALYST CARDS
 ══════════════════════════════════════════════ */
 .analyst-card {
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  padding: 16px;
-  margin-bottom: 12px;
+  padding: 14px;
+  margin-bottom: 10px;
   box-shadow: var(--shadow-card);
 }
 
@@ -187,28 +184,28 @@ header[data-testid="stHeader"] {
 .card-critical { border-left: 4px solid var(--state-critical) !important; }
 
 .afq-progress-track {
-  background: #e2e8f0;
-  border-radius: var(--radius-pill);
+  background: #1f2937;
+  border-radius: 9999px;
   height: 6px;
   width: 100%;
-  margin: 10px 0;
+  margin: 8px 0;
   overflow: hidden;
 }
 
 .afq-progress-fill {
   height: 100%;
-  border-radius: var(--radius-pill);
+  border-radius: 9999px;
   transition: width 0.4s ease;
 }
 
 /* ══════════════════════════════════════════════
-   STATUS BADGES
+   BADGES
 ══════════════════════════════════════════════ */
 .badge {
   display: inline-flex;
   align-items: center;
   padding: 3px 8px;
-  border-radius: var(--radius-xs);
+  border-radius: 4px;
   font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
@@ -216,10 +213,10 @@ header[data-testid="stHeader"] {
   font-family: 'JetBrains Mono', monospace;
 }
 
-.badge-nominal   { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
-.badge-elevated  { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
-.badge-high      { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
-.badge-critical  { background: #fef2f2; color: #991b1b; border: 1px solid #fca5a5; }
+.badge-nominal   { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+.badge-elevated  { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
+.badge-high      { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+.badge-critical  { background: rgba(220, 38, 38, 0.2);  color: #f87171; border: 1px solid rgba(220, 38, 38, 0.4); }
 
 /* ══════════════════════════════════════════════
    CONTAINERS & TABLES
@@ -229,15 +226,13 @@ header[data-testid="stHeader"] {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-card);
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
-.recommendation-container { padding: 18px; }
-.forecast-wrap { padding: 18px; }
+.recommendation-container { padding: 16px; }
+.forecast-wrap { padding: 16px; }
 
-/* ══════════════════════════════════════════════
-   STREAMLIT WIDGETS
-══════════════════════════════════════════════ */
+/* Streamlit Select / Inputs */
 div[data-baseweb="select"] > div {
   background-color: var(--bg-surface) !important;
   border: 1px solid var(--border-strong) !important;
@@ -266,11 +261,6 @@ div[data-baseweb="select"] > div {
 .stTabs [aria-selected="true"] {
   color: #ffffff !important;
   background-color: var(--accent-blue) !important;
-}
-
-[data-testid="stCheckbox"] label {
-  color: var(--text-secondary) !important;
-  font-size: 13px !important;
 }
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }

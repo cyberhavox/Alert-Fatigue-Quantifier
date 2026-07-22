@@ -1,4 +1,4 @@
-"""Signal Trend Charts component formatted for clean Light Slate theme.
+"""Signal Trend Charts component formatted for Enterprise SIEM Dark theme.
 
 Renders line charts using Matplotlib to display rolling window values,
 dashed historical baselines, and vertical anomaly indicators. Zero emojis.
@@ -87,13 +87,13 @@ def render_signal_charts(
     signal_names = [cfg["name"] for cfg in signals_config]
     tabs = st.tabs(signal_names)
 
-    # Clean Light Theme Palette (Sentinel & Log360 style)
-    bg_surface = "#ffffff"       # Crisp White Card Fill
-    border_subtle = "#e2e8f0"    # Light Slate Gridline
-    chart_blue = "#2563eb"       # Vibrant Blue Line
-    text_secondary = "#475569"   # Slate Text
-    state_critical = "#dc2626"   # Red Anomaly Flag
-    text_primary = "#0f172a"     # Dark Slate Text
+    # SIEM Slate-Steel Dark Palette (Sentinel & LogRhythm style)
+    bg_surface = "#111827"       # Card Fill
+    border_subtle = "#1f2937"    # Gridline
+    chart_blue = "#3b82f6"       # Vibrant Sentinel Blue
+    text_secondary = "#9ca3af"   # Light Slate Text
+    state_critical = "#ef4444"   # Red Anomaly Flag
+    text_primary = "#f9fafb"     # Crisp White Text
 
     for i, tab in enumerate(tabs):
         cfg = signals_config[i]
@@ -116,7 +116,7 @@ def render_signal_charts(
             y_vals = shift_data[col_name]
             
             # Subtle area fill
-            ax.fill_between(x_vals, y_vals, color=chart_blue, alpha=0.08)
+            ax.fill_between(x_vals, y_vals, color=chart_blue, alpha=0.10)
 
             # Main signal line
             ax.plot(
@@ -157,7 +157,7 @@ def render_signal_charts(
                             zorder=5
                         )
 
-            title_text = f"Telemetry Signal: {sig_name} — Analyst Node: {analyst_id}"
+            title_text = f"Telemetry Stream: {sig_name} — Analyst Node: {analyst_id}"
             ax.set_title(title_text, color=text_primary, fontsize=11, fontweight="bold", pad=10)
 
             ax.tick_params(colors=text_secondary, labelsize=9)
