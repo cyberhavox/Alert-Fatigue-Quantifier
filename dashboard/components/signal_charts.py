@@ -1,4 +1,4 @@
-"""Signal Trend Charts component formatted for high contrast Slate theme.
+"""Signal Trend Charts component formatted for clean Light Slate theme.
 
 Renders line charts using Matplotlib to display rolling window values,
 dashed historical baselines, and vertical anomaly indicators. Zero emojis.
@@ -87,13 +87,13 @@ def render_signal_charts(
     signal_names = [cfg["name"] for cfg in signals_config]
     tabs = st.tabs(signal_names)
 
-    # High Contrast Slate Theme Palette
-    bg_surface = "#1e293b"       # Slate 800 Card Fill
-    border_subtle = "#334155"    # Slate 700 Gridline
-    chart_cyan = "#0ea5e9"       # Bright Sky Blue Line
-    text_secondary = "#cbd5e1"   # Slate 300 Text
-    state_critical = "#ef4444"   # Bright Red Anomaly Flag
-    text_primary = "#f8fafc"     # Crisp White
+    # Clean Light Theme Palette (Sentinel & Log360 style)
+    bg_surface = "#ffffff"       # Crisp White Card Fill
+    border_subtle = "#e2e8f0"    # Light Slate Gridline
+    chart_blue = "#2563eb"       # Vibrant Blue Line
+    text_secondary = "#475569"   # Slate Text
+    state_critical = "#dc2626"   # Red Anomaly Flag
+    text_primary = "#0f172a"     # Dark Slate Text
 
     for i, tab in enumerate(tabs):
         cfg = signals_config[i]
@@ -116,12 +116,12 @@ def render_signal_charts(
             y_vals = shift_data[col_name]
             
             # Subtle area fill
-            ax.fill_between(x_vals, y_vals, color=chart_cyan, alpha=0.12)
+            ax.fill_between(x_vals, y_vals, color=chart_blue, alpha=0.08)
 
             # Main signal line
             ax.plot(
                 x_vals, y_vals,
-                color=chart_cyan,
+                color=chart_blue,
                 linewidth=2.2,
                 label=f"Rolling Window ({sig_name})"
             )
@@ -132,7 +132,7 @@ def render_signal_charts(
                 color=text_secondary,
                 linestyle="--",
                 linewidth=1.2,
-                alpha=0.8,
+                alpha=0.85,
                 label=f"30-Day Baseline ({baseline_val:.2f} {sig_unit})"
             )
 
@@ -170,7 +170,7 @@ def render_signal_charts(
             ax.xaxis.set_major_locator(mdates.AutoDateLocator())
             
             ax.set_ylabel(sig_unit, color=text_secondary, fontsize=9)
-            ax.grid(color=border_subtle, linestyle="-", linewidth=0.6, alpha=0.6)
+            ax.grid(color=border_subtle, linestyle="-", linewidth=0.7, alpha=0.8)
             
             legend = ax.legend(
                 loc="upper left",

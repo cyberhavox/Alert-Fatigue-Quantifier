@@ -1,7 +1,7 @@
 """Predictive Fatigue Risk Forecast panel.
 
 Renders ML-derived fatigue risk metrics and rolling probability timeline chart.
-Uses high-contrast HTML metrics and Matplotlib plot matching Slate dark theme.
+Uses high-contrast clean HTML metrics and Matplotlib plot matching Light Slate theme.
 Zero emojis, plain engineering voice.
 """
 
@@ -14,15 +14,15 @@ import pandas as pd
 import numpy as np
 import streamlit as st
 
-_BG_SURFACE   = "#1e293b"   # Slate 800
-_BORDER       = "#334155"   # Slate 700
-_TEXT_PRIMARY = "#f8fafc"   # Crisp White
-_TEXT_MUTED   = "#94a3b8"   # Slate 400
-_TEXT_SEC     = "#cbd5e1"   # Slate 300
-_COLOR_INDIGO = "#6366f1"   # Indigo
-_COLOR_RUBY   = "#ef4444"   # Red
-_COLOR_AMBER  = "#f59e0b"   # Amber
-_COLOR_TEAL   = "#10b981"   # Emerald Green
+_BG_SURFACE   = "#ffffff"   # Pure White Card
+_BORDER       = "#e2e8f0"   # Light Slate Border
+_TEXT_PRIMARY = "#0f172a"   # Dark Slate Text
+_TEXT_MUTED   = "#64748b"   # Medium Slate
+_TEXT_SEC     = "#475569"   # Slate Text
+_COLOR_BLUE   = "#2563eb"   # Blue 600
+_COLOR_RED    = "#dc2626"   # Red 600
+_COLOR_AMBER  = "#d97706"   # Amber 600
+_COLOR_EMERALD= "#059669"   # Emerald 600
 
 
 def _clean_html(raw_html: str) -> str:
@@ -32,10 +32,10 @@ def _clean_html(raw_html: str) -> str:
 
 def _risk_color(pred: int, prob: float) -> str:
     if pred == 1:
-        return _COLOR_RUBY
+        return _COLOR_RED
     if prob >= 0.35:
         return _COLOR_AMBER
-    return _COLOR_INDIGO
+    return _COLOR_BLUE
 
 
 def render_forecast_panel(
@@ -51,7 +51,7 @@ def render_forecast_panel(
     if analyst_data.empty or len(risk_probabilities) != len(scored_df):
         html = _clean_html("""
             <div class="forecast-wrap">
-              <div style="padding:24px; text-align:center; color:var(--text-muted); font-size:13px;">
+              <div style="padding:24px; text-align:center; color:#64748b; font-size:13px;">
                 Predictive model requires calibrated baseline data. Run <code>python scripts/run_full_pipeline.py</code>.
               </div>
             </div>
@@ -78,9 +78,9 @@ def render_forecast_panel(
     prob_pct  = curr_prob * 100.0
 
     risk_color  = _risk_color(curr_pred, curr_prob)
-    alert_bg    = "rgba(239, 68, 68, 0.15)"   if curr_pred == 1 else "rgba(16, 185, 129, 0.15)"
-    alert_border= _COLOR_RUBY                 if curr_pred == 1 else _COLOR_TEAL
-    alert_label = "ELEVATED FATIGUE RISK"     if curr_pred == 1 else "NOMINAL FATIGUE RISK"
+    alert_bg    = "#fef2f2" if curr_pred == 1 else "#ecfdf5"
+    alert_border= _COLOR_RED if curr_pred == 1 else _COLOR_EMERALD
+    alert_label = "ELEVATED FATIGUE RISK" if curr_pred == 1 else "NOMINAL FATIGUE RISK"
     alert_body  = (
         "High probability of fatigue crossing threshold limits. Queue rebalancing recommended."
         if curr_pred == 1
@@ -97,19 +97,19 @@ def render_forecast_panel(
       <div class="forecast-metric-row">
         <div class="forecast-metric-primary">
           <div class="forecast-metric-label">Predicted Risk Probability</div>
-          <div class="forecast-metric-value" style="color:{risk_color};">{prob_pct:.1f}<span style="font-size:20px; color:var(--text-secondary);">%</span></div>
+          <div class="forecast-metric-value" style="color:{risk_color};">{prob_pct:.1f}<span style="font-size:20px; color:#64748b;">%</span></div>
         </div>
         <div class="forecast-metric-primary">
           <div class="forecast-metric-label">At-Risk Intervals (Shift)</div>
-          <div class="forecast-metric-value" style="color:var(--text-primary); font-size:32px;">{n_at_risk}<span style="font-size:14px; color:var(--text-secondary);"> / {total_recs}</span></div>
+          <div class="forecast-metric-value" style="color:#0f172a; font-size:32px;">{n_at_risk}<span style="font-size:14px; color:#64748b;"> / {total_recs}</span></div>
         </div>
         <div class="forecast-metric-primary">
           <div class="forecast-metric-label">At-Risk Exposure Ratio</div>
-          <div class="forecast-metric-value" style="color:var(--text-primary); font-size:32px;">{at_risk_pct:.0f}<span style="font-size:18px; color:var(--text-secondary);">%</span></div>
+          <div class="forecast-metric-value" style="color:#0f172a; font-size:32px;">{at_risk_pct:.0f}<span style="font-size:18px; color:#64748b;">%</span></div>
         </div>
         <div class="forecast-alert-box" style="background:{alert_bg}; border:1px solid {alert_border}; border-left:4px solid {alert_border};">
           <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:{alert_border}; margin-bottom:6px;">{alert_label}</div>
-          <div style="font-size:13px; color:var(--text-primary);">{alert_body}</div>
+          <div style="font-size:13px; color:#0f172a;">{alert_body}</div>
         </div>
       </div>
     </div>
@@ -124,9 +124,9 @@ def render_forecast_panel(
     x = shift_data["closure_dt"]
     y = shift_data["risk_prob"] * 100.0
 
-    ax.fill_between(x, y, alpha=0.12, color=line_color)
+    ax.fill_between(x, y, alpha=0.08, color=line_color)
     ax.plot(x, y, color=line_color, linewidth=2.2, label="Predicted Risk Probability (%)")
-    ax.axhline(y=50.0, color=_TEXT_SEC, linestyle="--", linewidth=1.2, label="Classification Threshold (50%)", alpha=0.8)
+    ax.axhline(y=50.0, color=_TEXT_SEC, linestyle="--", linewidth=1.2, label="Classification Threshold (50%)", alpha=0.85)
 
     ax.set_ylim(-2, 105)
     ax.set_title(f"Rolling Fatigue Risk Probability Timeline — Analyst: {analyst_id}", color=_TEXT_PRIMARY, fontsize=11, fontweight="bold", pad=10)
@@ -141,10 +141,10 @@ def render_forecast_panel(
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
     ax.xaxis.set_major_locator(mdates.AutoDateLocator())
     ax.set_ylabel("Risk %", color=_TEXT_SEC, fontsize=9)
-    ax.grid(axis="y", color=_BORDER, linestyle="-", linewidth=0.6, alpha=0.6)
+    ax.grid(axis="y", color=_BORDER, linestyle="-", linewidth=0.7, alpha=0.8)
     ax.grid(axis="x", visible=False)
 
-    legend = ax.legend(loc="upper left", facecolor=_BG_SURFACE, edgecolor=_BORDER, fontsize=8.5, framealpha=1)
+    legend = ax.legend(loc="upper left", facecolor=_BG_SURFACE, edgecolor=_BORDER, fontsize=8.5, framealpha=1.0)
     for txt in legend.get_texts():
         txt.set_color(_TEXT_PRIMARY)
 
