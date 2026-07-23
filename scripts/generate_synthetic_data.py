@@ -175,6 +175,9 @@ def generate_analyst_logs(
         # Generate notes text based on length
         notes_text = generate_notes(notes_len)
 
+        mitre_tactics = ["Initial Access", "Execution", "Persistence", "Privilege Escalation", "Defense Evasion", "Credential Access", "Discovery", "Lateral Movement", "Exfiltration"]
+        mitre_tactic = random.choice(mitre_tactics)
+
         records.append({
             "analyst_id": analyst_id,
             "alert_id": alert_id,
@@ -188,6 +191,7 @@ def generate_analyst_logs(
             "escalation_flag": escalation_flag,
             "ai_accepted": ai_accepted,
             "context_switch_count": context_switch_count,
+            "mitre_tactic": mitre_tactic,
             "notes": notes_text
         })
         alert_counter += 1

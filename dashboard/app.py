@@ -211,11 +211,13 @@ def main() -> None:
     else:
         live_enrich_depth = 6.0
 
+    mean_mitre_workload = shift_df["mitre_workload"].mean() if "mitre_workload" in shift_df.columns else 24.5
+
     afi_color = "#10b981" if mean_afi < 50 else ("#f59e0b" if mean_afi < 70 else "#ef4444")
 
     # ── Live Operational KPI Cards ─────────────────────────────
     kpi_html = _clean_html(f"""
-    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:16px; margin-bottom:16px;">
+    <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:14px; margin-bottom:16px;">
       <div class="siem-kpi-card">
         <div class="siem-kpi-label">Shift Telemetry Volume</div>
         <div class="siem-kpi-val" style="color:var(--text-primary);">{total_logs:,}</div>
@@ -236,6 +238,11 @@ def main() -> None:
         <div class="siem-kpi-val" style="color:var(--text-primary);">{mean_triage:.0f}s</div>
         <div class="siem-kpi-sub">Log-Normal response time</div>
       </div>
+      <div class="siem-kpi-card">
+        <div class="siem-kpi-label">MITRE ATT&amp;CK Saturation</div>
+        <div class="siem-kpi-val" style="color:#3b82f6;">{mean_mitre_workload:.1f}</div>
+        <div class="siem-kpi-sub">Tactic Weight &times; Throughput</div>
+      </div>
     </div>
     """)
     st.markdown(kpi_html, unsafe_allow_html=True)
@@ -246,8 +253,8 @@ def main() -> None:
     benchmarks_html = _clean_html(f"""
     <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:16px; margin-bottom:20px;">
       <div style="background:#111827; border:1px solid #1f2937; border-radius:8px; padding:14px 16px; box-shadow:0 2px 4px rgba(0,0,0,0.2);">
-        <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#3b82f6; margin-bottom:4px;">USENIX Security 2022 (Alahmadi et al.)</div>
-        <div style="font-size:12px; color:#f9fafb; font-weight:600;">99% False Positive &amp; Shortcutting Benchmark</div>
+        <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#3b82f6; margin-bottom:4px;">USENIX Security 2022 &amp; Sinteza 2026</div>
+        <div style="font-size:12px; color:#f9fafb; font-weight:600;">99% False Positive &amp; Non-Linear Velocity</div>
         <div style="font-family:'JetBrains Mono',monospace; font-size:18px; font-weight:700; color:#f9fafb; margin:4px 0;">
           {live_fp_rate:.1f}% FP <span style="font-size:11px; color:#9ca3af; font-weight:400;">(USENIX Avg: 99.0%)</span>
         </div>
@@ -264,21 +271,21 @@ def main() -> None:
       </div>
 
       <div style="background:#111827; border:1px solid #1f2937; border-radius:8px; padding:14px 16px; box-shadow:0 2px 4px rgba(0,0,0,0.2);">
-        <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#3b82f6; margin-bottom:4px;">SOUPS 2015 (Sundaramurthy et al.)</div>
-        <div style="font-size:12px; color:#f9fafb; font-weight:600;">Human Capital &amp; Burnout Prevention</div>
+        <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#3b82f6; margin-bottom:4px;">ResearchGate 2021 &amp; SOUPS 2015</div>
+        <div style="font-size:12px; color:#f9fafb; font-weight:600;">THERP Human Error (HEP) &amp; Burnout</div>
         <div style="font-family:'JetBrains Mono',monospace; font-size:18px; font-weight:700; color:#f9fafb; margin:4px 0;">
-          Read-Only Advisory <span style="font-size:11px; color:#9ca3af; font-weight:400;">(Non-Punitive)</span>
+          THERP HRA Model <span style="font-size:11px; color:#9ca3af; font-weight:400;">(Non-Punitive)</span>
         </div>
-        <div style="font-size:11px; color:#10b981;">&check; Breaks vicious cycles of management pressure</div>
+        <div style="font-size:11px; color:#10b981;">&check; Quantifies Human Error Probability P(Error)</div>
       </div>
 
       <div style="background:#111827; border:1px solid #1f2937; border-radius:8px; padding:14px 16px; box-shadow:0 2px 4px rgba(0,0,0,0.2);">
-        <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#3b82f6; margin-bottom:4px;">ACM CCS 2019 &amp; IEEE Cyber Ops</div>
-        <div style="font-size:12px; color:#f9fafb; font-weight:600;">Tool Friction &amp; Ergonomics Limit</div>
+        <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#3b82f6; margin-bottom:4px;">IEEE THMS / ACM CCS 2019</div>
+        <div style="font-size:12px; color:#f9fafb; font-weight:600;">Adaptive Autonomy &amp; Context Entropy</div>
         <div style="font-family:'JetBrains Mono',monospace; font-size:18px; font-weight:700; color:#f9fafb; margin:4px 0;">
-          15 Alerts / Hour <span style="font-size:11px; color:#9ca3af; font-weight:400;">(Ergonomic Limit)</span>
+          Level 0 - 3 Autonomy <span style="font-size:11px; color:#9ca3af; font-weight:400;">(SOAR Webhook)</span>
         </div>
-        <div style="font-size:11px; color:#10b981;">&check; Ingests behavioral logs directly from SIEM</div>
+        <div style="font-size:11px; color:#10b981;">&check; Dynamic SOAR Queue Rebalancing active</div>
       </div>
     </div>
     """)

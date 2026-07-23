@@ -58,6 +58,10 @@ def build_feature_matrix(
         "hourly_closure_rate",
         "automation_bias_index",
         "context_switch_count",
+        "fatigue_velocity",
+        "contextual_entropy",
+        "mitre_workload",
+        "hep_score",
         "hour_of_day",
         "afi_lag_1",
         "afi_lag_2"

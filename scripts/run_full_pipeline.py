@@ -27,6 +27,11 @@ from signals.escalation_deviations import calculate_escalation_deviations
 from signals.hourly_closure_rate import calculate_hourly_closure_rate
 from signals.automation_bias import calculate_automation_bias
 from signals.context_switching import calculate_context_switching
+from signals.fatigue_velocity import calculate_fatigue_velocity
+from signals.contextual_entropy import calculate_contextual_entropy
+from scoring.therp_hep_calculator import calculate_therp_hep
+from scoring.mitre_complexity import calculate_mitre_workload_saturation
+from scoring.burnout_index import calculate_burnout_risk_index
 from degradation.detector import detect_degradation_anomalies
 from prediction.feature_engineering import build_feature_matrix
 from prediction.model import train_predictive_model, save_model
@@ -74,14 +79,18 @@ def main() -> None:
     hourly_rate = calculate_hourly_closure_rate(df)
     abi_signal = calculate_automation_bias(df)
     context_switches = calculate_context_switching(df)
+    shannon_entropy = calculate_contextual_entropy(df)
+    mitre_workload = calculate_mitre_workload_saturation(df)
 
     siem_prov_col = df["siem_provider"] if "siem_provider" in df.columns else "All Log Sources (OCSF Stream)"
     closure_type_col = df["closure_type"] if "closure_type" in df.columns else "investigated"
+    mitre_tactic_col = df["mitre_tactic"] if "mitre_tactic" in df.columns else "Credential Access"
 
     signals_df = pd.DataFrame({
         "analyst_id": df["analyst_id"],
         "siem_provider": siem_prov_col,
         "closure_type": closure_type_col,
+        "mitre_tactic": mitre_tactic_col,
         "closure_timestamp": df["closure_timestamp"],
         "triage_interval": triage_int,
         "uninvestigated_closures": uninvest_cls,
@@ -89,12 +98,38 @@ def main() -> None:
         "escalation_deviations": escalation_dev,
         "hourly_closure_rate": hourly_rate,
         "automation_bias_index": abi_signal,
-        "context_switch_count": context_switches
+        "context_switch_count": context_switches,
+        "contextual_entropy": shannon_entropy,
+        "mitre_workload": mitre_workload
     }, index=df.index)
 
     # 5. Compute Analyst Fatigue Index (AFI)
     print("[4/7] Scoring Analyst Fatigue Index (AFI)...")
     scored_df = calculate_analyst_afi(signals_df, baselines)
+
+    # Compute Fatigue Velocity, Acceleration, THERP HEP, and Burnout Risk Index
+    vel, accel = calculate_fatigue_velocity(scored_df)
+    scored_df["fatigue_velocity"] = vel
+    scored_df["fatigue_acceleration"] = accel
+
+    hep_list = []
+    bri_list = []
+    risk_dollars_list = []
+    for idx, row in scored_df.iterrows():
+        aid = row["analyst_id"]
+        base = baselines.get(aid, {})
+        base_t = base.get("mean_triage_interval", 180.0)
+        
+        hep = calculate_therp_hep(row["afi_score"], 1.0, row["automation_bias_index"], row["context_switch_count"])
+        bri, dollars = calculate_burnout_risk_index(row["afi_score"], row["triage_interval"], base_t, row["enrichment_depth"], row["uninvestigated_closures"])
+        
+        hep_list.append(hep)
+        bri_list.append(bri)
+        risk_dollars_list.append(dollars)
+
+    scored_df["hep_score"] = hep_list
+    scored_df["burnout_risk_index"] = bri_list
+    scored_df["financial_risk_exposure"] = risk_dollars_list
 
     # 6. Detect Statistical Degradation (Mann-Whitney U Test)
     print("[5/7] Detecting operational degradation anomalies...")

@@ -1,13 +1,16 @@
 """Recommendation Panel component.
 
 Renders advisory suggestions sidebar panel, showing recommended mitigations,
-warning triggers, SOAR JSON Webhook payload, and persistent safety disclaimer. Zero emojis.
+Adaptive Autonomy Level, THERP Human Error Probability (HEP %), SOAR Webhook payload,
+and persistent safety disclaimer. Zero emojis.
 """
 
 from __future__ import annotations
 import json
 import streamlit as st
 from recommendations.engine import generate_soar_webhook_payload
+from scoring.therp_hep_calculator import calculate_therp_hep
+from scoring.burnout_index import calculate_burnout_risk_index
 
 
 def _clean_html(raw_html: str) -> str:
@@ -20,12 +23,18 @@ def render_recommendation_panel(
     afi_score: float,
     recommendations: dict
 ) -> None:
-    """Renders the advisory recommendations panel and SOAR JSON webhook."""
+    """Renders the advisory recommendations panel, Adaptive Autonomy Level, and SOAR Webhook."""
     state = recommendations.get("state", "NOMINAL")
     primary_rec = recommendations.get("primary_recommendation", "")
     actions = recommendations.get("actions", [])
     warnings = recommendations.get("warnings", [])
+    autonomy_title = recommendations.get("autonomy_level_title", "Level 0: Manual Operator Triage")
+    autonomy_desc = recommendations.get("autonomy_level_desc", "Human-in-the-Loop")
+    hep_pct = recommendations.get("therp_hep_percentage", calculate_therp_hep(afi_score))
     disclaimer = recommendations.get("disclaimer", "All recommendations are advisory. Operational decisions rest with SOC management.")
+
+    # Calculate financial risk exposure ($)
+    bri_score, risk_dollars = calculate_burnout_risk_index(afi_score, 180.0, 180.0, 4.0, 0.1)
 
     color_map = {
         "NOMINAL": "#10b981",
@@ -68,7 +77,27 @@ def render_recommendation_panel(
         <span class="badge {badge_cls}">AFI {afi_score:.0f}</span>
       </div>
       
-      <p style="font-weight:500; font-size:14px; color:{state_color}; margin-bottom:16px; line-height:1.4;">
+      <div style="background:#1f2937; border:1px solid #374151; border-radius:6px; padding:10px 12px; margin-bottom:14px;">
+        <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#3b82f6; letter-spacing:0.5px;">Adaptive SOAR Autonomy Level</div>
+        <div style="font-size:13px; font-weight:700; color:#f9fafb; margin-top:2px;">{autonomy_title}</div>
+        <div style="font-size:11px; color:#9ca3af; margin-top:2px;">{autonomy_desc}</div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:14px;">
+        <div style="background:#1f2937; border:1px solid #374151; border-radius:6px; padding:10px;">
+          <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#9ca3af;">THERP Human Error (HEP)</div>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:16px; font-weight:700; color:{'#ef4444' if hep_pct > 25 else '#10b981'}; margin-top:2px;">{hep_pct:.1f}%</div>
+          <div style="font-size:10px; color:#9ca3af;">Error Prob. (ResearchGate)</div>
+        </div>
+
+        <div style="background:#1f2937; border:1px solid #374151; border-radius:6px; padding:10px;">
+          <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#9ca3af;">Breach Risk Exposure</div>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:16px; font-weight:700; color:#f59e0b; margin-top:2px;">${risk_dollars:,.0f}</div>
+          <div style="font-size:10px; color:#9ca3af;">Ponemon Risk Estimate</div>
+        </div>
+      </div>
+
+      <p style="font-weight:500; font-size:13px; color:{state_color}; margin-bottom:14px; line-height:1.4;">
         {primary_rec}
       </p>
 
@@ -77,12 +106,12 @@ def render_recommendation_panel(
       </div>
       {actions_html}
 
-      <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-secondary); margin-top:16px; margin-bottom:8px; letter-spacing:0.5px;">
+      <div style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--text-secondary); margin-top:14px; margin-bottom:8px; letter-spacing:0.5px;">
         Trigger Conditions
       </div>
       {warnings_html}
 
-      <div style="font-size:11px; color:var(--text-muted); border-top:1px solid #1f2937; padding-top:12px; margin-top:16px; line-height:1.4;">
+      <div style="font-size:11px; color:var(--text-muted); border-top:1px solid #1f2937; padding-top:12px; margin-top:14px; line-height:1.4;">
         {disclaimer}
       </div>
     </div>

@@ -1,7 +1,7 @@
-"""Advisory recommendations engine for the Alert Fatigue Quantifier.
+"""Advisory recommendations & Adaptive Autonomy Engine for the Alert Fatigue Quantifier.
 
-Maps computed Analyst Fatigue Index (AFI) scores, statistical anomalies, and predictive
-ML risks into non-imperative, advisory actions for SOC managers and exports SOAR Webhooks.
+Maps computed Analyst Fatigue Index (AFI) scores, THERP Human Error Probability (HEP),
+and predictive ML risks into Adaptive Autonomy Levels (Level 0-3) and OCSF 1.1.0 JSON Webhooks.
 """
 
 from config.settings import (
@@ -9,6 +9,25 @@ from config.settings import (
     THRESHOLD_ELEVATED_MAX,
     THRESHOLD_HIGH_MAX,
 )
+from scoring.therp_hep_calculator import calculate_therp_hep
+
+
+def get_adaptive_autonomy_level(afi_score: float) -> tuple[int, str, str]:
+    """Determines Adaptive Autonomy Level (IEEE Access / THMS).
+
+    - Level 0: Manual Triage (Nominal AFI < 50)
+    - Level 1: AI-Assisted Enrichment (Elevated AFI 50-70)
+    - Level 2: Semi-Automated Pre-Filtering (High AFI 70-90)
+    - Level 3: Full Autonomous Quarantine & Failover (Critical AFI >= 90)
+    """
+    if afi_score <= THRESHOLD_NOMINAL_MAX:
+        return 0, "Level 0: Manual Operator Triage", "Human-in-the-Loop: Standard manual inspection."
+    elif afi_score <= THRESHOLD_ELEVATED_MAX:
+        return 1, "Level 1: AI-Assisted Enrichment", "Human-in-the-Loop: Automated threat intel lookups enabled."
+    elif afi_score <= THRESHOLD_HIGH_MAX:
+        return 2, "Level 2: Semi-Automated Pre-Filtering", "Human-on-the-Loop: SOAR pre-dismisses low-risk FP alerts."
+    else:
+        return 3, "Level 3: Full Autonomous Failover", "Human-out-of-the-Loop: Auto-quarantine & queue rerouting active."
 
 
 def get_advisory_recommendations(
@@ -16,17 +35,10 @@ def get_advisory_recommendations(
     anomalies: list[dict],
     prediction_flag: int
 ) -> dict:
-    """Generates advisory recommendations based on AFI, anomalies, and ML risk flags.
+    """Generates advisory recommendations based on AFI, anomalies, and ML risk flags."""
+    level_num, level_title, level_desc = get_adaptive_autonomy_level(afi_score)
+    hep_pct = calculate_therp_hep(afi_score)
 
-    Args:
-        afi_score: The composite Analyst Fatigue Index (0.0 to 100.0).
-        anomalies: A list of anomaly dictionaries triggered for the analyst.
-        prediction_flag: Binary prediction from the ML classifier (1 = fatigue risk, 0 = normal).
-
-    Returns:
-        A dictionary containing state, primary_recommendation, actions, warnings, and disclaimer.
-    """
-    # 1. Determine severity state based on literature thresholds
     if afi_score <= THRESHOLD_NOMINAL_MAX:
         state = "NOMINAL"
         primary_rec = "Analyst is operating within nominal baseline parameters."
@@ -58,7 +70,6 @@ def get_advisory_recommendations(
             "Mandate a rest break before resuming any triage duties."
         ]
 
-    # 2. Extract warnings from statistical anomalies
     warnings = []
     for anomaly in anomalies:
         signal = anomaly.get("Signal", "")
@@ -80,7 +91,6 @@ def get_advisory_recommendations(
                 f"Statistical deviation in {signal} detected (z={deviation:.2f}, p={p_val:.4f})."
             )
 
-    # 3. Incorporate ML predictions
     if prediction_flag == 1:
         warnings.append(
             "Predictive risk warning: ML model forecasts elevated fatigue risk in the upcoming hours. "
@@ -92,6 +102,10 @@ def get_advisory_recommendations(
         "primary_recommendation": primary_rec,
         "actions": actions,
         "warnings": warnings,
+        "autonomy_level_num": level_num,
+        "autonomy_level_title": level_title,
+        "autonomy_level_desc": level_desc,
+        "therp_hep_percentage": hep_pct,
         "disclaimer": "All recommendations are advisory. Decisions rest with the SOC manager."
     }
 
@@ -102,24 +116,26 @@ def generate_soar_webhook_payload(
     prediction_flag: int,
     timestamp: str = ""
 ) -> dict:
-    """Generates standardized OCSF 1.1.0 / Cortex XSOAR compatible JSON Webhook payload.
-
-    Source: IEEE THMS 2023 (Shirley et al.)
-    Proactively exports queue rebalancing triggers when analyst fatigue exceeds limits.
-    """
+    """Generates standardized OCSF 1.1.0 / Cortex XSOAR compatible JSON Webhook payload."""
     trigger_flag = afi_score > 70.0 or prediction_flag == 1
+    level_num, level_title, _ = get_adaptive_autonomy_level(afi_score)
+    hep_pct = calculate_therp_hep(afi_score)
+
     return {
         "event_type": "AFQ_SOAR_QUEUE_REBALANCE_TRIGGER" if trigger_flag else "AFQ_STATUS_NOMINAL",
         "schema_version": "OCSF_1.1.0",
-        "timestamp": timestamp or "2026-07-23T05:40:00Z",
+        "timestamp": timestamp or "2026-07-23T06:20:00Z",
         "analyst_node": analyst_id,
         "metrics": {
             "analyst_fatigue_index": round(afi_score, 2),
+            "therp_human_error_probability_pct": hep_pct,
+            "adaptive_autonomy_level": level_num,
             "predictive_risk_flag": int(prediction_flag),
             "rebalance_action_required": trigger_flag
         },
         "soar_action_recommendation": {
             "target_soar_platform": "Cortex XSOAR / Splunk SOAR",
+            "autonomy_policy": level_title,
             "action": "PAUSE_HIGH_SEVERITY_TICKET_ASSIGNMENT" if trigger_flag else "MAINTAIN_STANDARD_QUEUE",
             "reroute_queue": "SOC_REBALANCED_QUEUE_POOL" if trigger_flag else "PRIMARY_DESK",
             "mandatory_rest_break_minutes": 20 if afi_score > 70.0 else 0
