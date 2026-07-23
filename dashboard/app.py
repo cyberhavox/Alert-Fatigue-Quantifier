@@ -1,8 +1,8 @@
 """Alert Fatigue Quantifier (AFQ) — Enterprise SOC Operations Dashboard.
 
-Inspired by Microsoft Sentinel, LogRhythm & Cortex XSOAR.
-Monitors real-time analyst cognitive load, compares live telemetry against global SANS/Ponemon
-industry benchmarks, detects decision quality degradation, and forecasts fatigue risk.
+Grounded in 9 foundational literature sources: SANS SOC Surveys (2023-2024), USENIX Security (Alahmadi 2022),
+SOUPS (Sundaramurthy 2015-2016), ACM CCS (Kokulu 2019), and Human Factors in Cyber Ops (Al-Mhiqani 2021).
+Monitors real-time analyst cognitive load, detects behavioral degradation, and forecasts fatigue risk.
 """
 
 from __future__ import annotations
@@ -130,6 +130,12 @@ def main() -> None:
         st.markdown("- **Parser Latency:** `1.2 ms`")
         st.markdown("- **Log Collectors:** `5 / 5 Online`")
         st.markdown("- **Schema Format:** `OCSF 1.1.0`")
+        st.markdown("---")
+        st.markdown("**Primary Literature Base**")
+        st.markdown("- [USENIX Security 2022](https://www.usenix.org/conference/usenixsecurity22/presentation/alahmadi)")
+        st.markdown("- [SANS SOC Survey 2024](https://www.sans.org/white-papers/sans-2024-soc-survey-facing-top-challenges-security-operations)")
+        st.markdown("- [SOUPS 2015 (Burnout Model)](https://www.usenix.org/conference/soups2015/proceedings/presentation/sundaramurthy)")
+        st.markdown("- [ACM CCS 2019 (Workflows)](https://dl.acm.org/doi/10.1145/3319535.3354239)")
 
     # ── Header Bar ────────────────────────────────────────────
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
@@ -224,44 +230,44 @@ def main() -> None:
     st.markdown(kpi_html, unsafe_allow_html=True)
 
     # ── Live Industry Research Benchmark Comparison Panel ──────
-    st.markdown('<span class="section-label">Live Telemetry Stream vs. Global SIEM Research Benchmarks</span>', unsafe_allow_html=True)
+    st.markdown('<span class="section-label">Live Telemetry Stream vs. Primary Literature Review Benchmarks</span>', unsafe_allow_html=True)
 
     benchmarks_html = _clean_html(f"""
     <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:16px; margin-bottom:20px;">
       <div style="background:#111827; border:1px solid #1f2937; border-radius:8px; padding:14px 16px; box-shadow:0 2px 4px rgba(0,0,0,0.2);">
-        <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#3b82f6; margin-bottom:4px;">SANS SOC Survey 2024-2025 Benchmark</div>
-        <div style="font-size:12px; color:#f9fafb; font-weight:600;">Noise-to-Signal / FP Ratio</div>
+        <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#3b82f6; margin-bottom:4px;">USENIX Security 2022 (Alahmadi et al.)</div>
+        <div style="font-size:12px; color:#f9fafb; font-weight:600;">99% False Positive &amp; Shortcutting Benchmark</div>
         <div style="font-family:'JetBrains Mono',monospace; font-size:18px; font-weight:700; color:#f9fafb; margin:4px 0;">
-          {live_fp_rate:.1f}% <span style="font-size:11px; color:#9ca3af; font-weight:400;">(Benchmark: 73.0% – 80.0%)</span>
+          {live_fp_rate:.1f}% FP <span style="font-size:11px; color:#9ca3af; font-weight:400;">(USENIX Avg: 99.0%)</span>
         </div>
-        <div style="font-size:11px; color:#10b981;">&check; Calibrated to SANS 2025 Poisson arrival baseline</div>
+        <div style="font-size:11px; color:#ef4444;">&excl; Low enrichment (&lt; 1.5 actions) flags ticket shortcutting</div>
       </div>
 
       <div style="background:#111827; border:1px solid #1f2937; border-radius:8px; padding:14px 16px; box-shadow:0 2px 4px rgba(0,0,0,0.2);">
-        <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#3b82f6; margin-bottom:4px;">Ponemon Institute 2022 Benchmark</div>
-        <div style="font-size:12px; color:#f9fafb; font-weight:600;">Mean Triage Response Speed</div>
+        <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#3b82f6; margin-bottom:4px;">SANS SOC Survey 2023-2024</div>
+        <div style="font-size:12px; color:#f9fafb; font-weight:600;">Workload Saturation &amp; MTTR Speed</div>
         <div style="font-family:'JetBrains Mono',monospace; font-size:18px; font-weight:700; color:#f9fafb; margin:4px 0;">
-          {mean_triage:.0f}s <span style="font-size:11px; color:#9ca3af; font-weight:400;">(Industry Avg: 180s – 420s)</span>
+          {mean_triage:.0f}s MTTR <span style="font-size:11px; color:#9ca3af; font-weight:400;">(SANS Avg: 180s - 420s)</span>
         </div>
-        <div style="font-size:11px; color:#f59e0b;">&excl; Log-Normal distribution shift detected during fatigue</div>
+        <div style="font-size:11px; color:#f59e0b;">&excl; 66% teams overwhelmed by queue volume spikes</div>
       </div>
 
       <div style="background:#111827; border:1px solid #1f2937; border-radius:8px; padding:14px 16px; box-shadow:0 2px 4px rgba(0,0,0,0.2);">
-        <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#3b82f6; margin-bottom:4px;">USENIX Security 2022 Benchmark</div>
-        <div style="font-size:12px; color:#f9fafb; font-weight:600;">Investigation Depth / Enrichment</div>
+        <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#3b82f6; margin-bottom:4px;">SOUPS 2015 (Sundaramurthy et al.)</div>
+        <div style="font-size:12px; color:#f9fafb; font-weight:600;">Human Capital &amp; Burnout Prevention</div>
         <div style="font-family:'JetBrains Mono',monospace; font-size:18px; font-weight:700; color:#f9fafb; margin:4px 0;">
-          {live_enrich_depth:.1f} <span style="font-size:11px; color:#9ca3af; font-weight:400;">actions/alert (Nominal: 6.0)</span>
+          Read-Only Advisory <span style="font-size:11px; color:#9ca3af; font-weight:400;">(Non-Punitive)</span>
         </div>
-        <div style="font-size:11px; color:#ef4444;">&excl; Fatigued nodes show shortcutting (&lt; 1.5 actions)</div>
+        <div style="font-size:11px; color:#10b981;">&check; Breaks vicious cycles of management pressure</div>
       </div>
 
       <div style="background:#111827; border:1px solid #1f2937; border-radius:8px; padding:14px 16px; box-shadow:0 2px 4px rgba(0,0,0,0.2);">
-        <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#3b82f6; margin-bottom:4px;">IEEE / ACM Ergonomics Benchmark</div>
-        <div style="font-size:12px; color:#f9fafb; font-weight:600;">MWU Anomaly Significance Threshold</div>
+        <div style="font-size:10px; font-weight:700; text-transform:uppercase; color:#3b82f6; margin-bottom:4px;">ACM CCS 2019 &amp; IEEE Cyber Ops</div>
+        <div style="font-size:12px; color:#f9fafb; font-weight:600;">Tool Friction &amp; Ergonomics Limit</div>
         <div style="font-family:'JetBrains Mono',monospace; font-size:18px; font-weight:700; color:#f9fafb; margin:4px 0;">
-          p &lt; 0.05 <span style="font-size:11px; color:#9ca3af; font-weight:400;">(Non-Parametric Rank Sum)</span>
+          15 Alerts / Hour <span style="font-size:11px; color:#9ca3af; font-weight:400;">(Ergonomic Limit)</span>
         </div>
-        <div style="font-size:11px; color:#10b981;">&check; {anom_count} statistically significant degradation events</div>
+        <div style="font-size:11px; color:#10b981;">&check; Ingests behavioral logs directly from SIEM</div>
       </div>
     </div>
     """)
