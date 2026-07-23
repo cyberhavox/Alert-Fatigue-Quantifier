@@ -32,7 +32,7 @@ def render_speed_quality_scatter(scored_df: pd.DataFrame) -> None:
     text_primary = "#f9fafb"
     text_secondary = "#9ca3af"
 
-    fig, ax = plt.subplots(figsize=(11, 3.8), facecolor=bg_surface)
+    fig, ax = plt.subplots(figsize=(11, 4.2), facecolor=bg_surface)
     ax.set_facecolor(bg_surface)
 
     # Calculate average triage speed and enrichment depth per analyst
@@ -42,33 +42,72 @@ def render_speed_quality_scatter(scored_df: pd.DataFrame) -> None:
         "afi_score": "last"
     }).reset_index()
 
-    x_vals = summary["triage_interval"]
-    y_vals = summary["enrichment_depth"]
+    # Sort to assign non-overlapping label offsets predictably
+    summary = summary.sort_values(by=["enrichment_depth", "triage_interval"], ascending=[False, True]).reset_index(drop=True)
 
     colors = ["#ef4444" if score > 70 else ("#f59e0b" if score > 50 else "#10b981") for score in summary["afi_score"]]
 
-    scatter = ax.scatter(x_vals, y_vals, c=colors, s=180, edgecolors="#f9fafb", linewidth=1.5, zorder=5)
+    ax.scatter(
+        summary["triage_interval"],
+        summary["enrichment_depth"],
+        c=colors,
+        s=220,
+        edgecolors="#ffffff",
+        linewidth=1.8,
+        zorder=5
+    )
 
-    for _, row in summary.iterrows():
+    # Non-overlapping offset directional bank for analyst label boxes
+    offset_bank = [
+        (-75, 18),   # Top-left
+        (18, 18),    # Top-right
+        (-75, -24),  # Bottom-left
+        (18, -24),   # Bottom-right
+        (0, 26),     # Top-center
+    ]
+
+    for idx, row in summary.iterrows():
+        dx, dy = offset_bank[idx % len(offset_bank)]
         ax.annotate(
-            f" {row['analyst_id']}\n (AFI {row['afi_score']:.0f})",
-            (row["triage_interval"], row["enrichment_depth"]),
+            f"{row['analyst_id']} (AFI {row['afi_score']:.0f})",
+            xy=(row["triage_interval"], row["enrichment_depth"]),
+            xytext=(dx, dy),
+            textcoords="offset points",
             color=text_primary,
-            fontsize=9,
-            fontweight="bold"
+            fontsize=8.5,
+            fontweight="bold",
+            bbox=dict(boxstyle="round,pad=0.35", fc="#1f2937", ec="#374151", alpha=0.9, lw=0.8),
+            arrowprops=dict(arrowstyle="->", connectionstyle="arc3,rad=0.15", color="#9ca3af", lw=0.8),
+            zorder=6
         )
 
     # Quadrant Dividers (SANS/USENIX Thresholds: 180s Triage Speed, 3.0 Enrichment Depth)
-    ax.axvline(x=180.0, color="#374151", linestyle="--", linewidth=1.2)
-    ax.axhline(y=3.0, color="#374151", linestyle="--", linewidth=1.2)
+    ax.axvline(x=180.0, color="#374151", linestyle="--", linewidth=1.4, zorder=2)
+    ax.axhline(y=3.0, color="#374151", linestyle="--", linewidth=1.4, zorder=2)
 
-    # Annotate Quadrants
-    ax.text(80, 5.2, "QUADRANT I: Nominal Thorough\n(High Quality, Fast Speed)", color="#10b981", fontsize=8.5, fontweight="bold")
-    ax.text(280, 5.2, "QUADRANT II: Diligent Slow\n(High Quality, Extended Speed)", color="#3b82f6", fontsize=8.5, fontweight="bold")
-    ax.text(80, 1.0, "QUADRANT III: Fatigued Rushing\n(Low Quality Shortcutting - FLAGGED)", color="#ef4444", fontsize=8.5, fontweight="bold")
-    ax.text(280, 1.0, "QUADRANT IV: Passive Exhausted\n(Low Quality, Extended Speed)", color="#f59e0b", fontsize=8.5, fontweight="bold")
+    # Clean Quadrant Labels using Relative transAxes Coordinates
+    ax.text(0.02, 0.95, "QUADRANT I: Nominal Thorough\n(High Quality, Fast Speed)",
+            transform=ax.transAxes, color="#10b981", fontsize=8.5, fontweight="bold", va="top", ha="left")
 
-    ax.set_title("Analyst Triage Speed vs. Investigation Depth (SANS 2024 Trade-Off Quadrants)", color=text_primary, fontsize=11, fontweight="bold", pad=10)
+    ax.text(0.98, 0.95, "QUADRANT II: Diligent Slow\n(High Quality, Extended Speed)",
+            transform=ax.transAxes, color="#3b82f6", fontsize=8.5, fontweight="bold", va="top", ha="right")
+
+    ax.text(0.02, 0.05, "QUADRANT III: Fatigued Rushing\n(Low Quality Shortcutting - FLAGGED)",
+            transform=ax.transAxes, color="#ef4444", fontsize=8.5, fontweight="bold", va="bottom", ha="left")
+
+    ax.text(0.98, 0.05, "QUADRANT IV: Passive Exhausted\n(Low Quality, Extended Speed)",
+            transform=ax.transAxes, color="#f59e0b", fontsize=8.5, fontweight="bold", va="bottom", ha="right")
+
+    # Set dynamic axis limits with generous margins
+    x_min = summary["triage_interval"].min()
+    x_max = summary["triage_interval"].max()
+    y_min = summary["enrichment_depth"].min()
+    y_max = summary["enrichment_depth"].max()
+
+    ax.set_xlim(min(100.0, x_min - 40), max(520.0, x_max + 60))
+    ax.set_ylim(max(0.0, y_min - 0.8), max(6.5, y_max + 1.2))
+
+    ax.set_title("Analyst Triage Speed vs. Investigation Depth (SANS 2024 Trade-Off Quadrants)", color=text_primary, fontsize=11, fontweight="bold", pad=12)
     ax.set_xlabel("Mean Triage Latency (seconds) — SANS Baseline: 180s", color=text_secondary, fontsize=9)
     ax.set_ylabel("Mean Enrichment Depth (actions/alert)", color=text_secondary, fontsize=9)
 
@@ -77,7 +116,7 @@ def render_speed_quality_scatter(scored_df: pd.DataFrame) -> None:
         spine.set_color(border_subtle)
     ax.grid(color=border_subtle, linestyle="-", linewidth=0.7, alpha=0.8)
 
-    plt.tight_layout(pad=0.4)
+    plt.tight_layout(pad=0.5)
     st.pyplot(fig)
     plt.close(fig)
 
