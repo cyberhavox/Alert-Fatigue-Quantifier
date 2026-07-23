@@ -187,12 +187,18 @@ def main() -> None:
     total_logs = len(shift_df)
     unique_analysts = sorted(scored_df["analyst_id"].unique())
 
+    # Filter degradation anomalies by the selected shift window
+    filtered_anomalies_df = anomalies_df.copy()
+    if not filtered_anomalies_df.empty and "Timestamp" in filtered_anomalies_df.columns:
+        filtered_anomalies_df["anom_dt"] = pd.to_datetime(filtered_anomalies_df["Timestamp"])
+        filtered_anomalies_df = filtered_anomalies_df[filtered_anomalies_df["anom_dt"] >= shift_start]
+
     latest_per_analyst = shift_df.sort_values("closure_dt").groupby("analyst_id").last()
     mean_afi = latest_per_analyst["afi_score"].mean() if not latest_per_analyst.empty else 0.0
     global_state = _afi_state(mean_afi)
 
     mean_triage = shift_df["triage_interval"].mean() if not shift_df.empty else 0.0
-    anom_count = len(anomalies_df)
+    anom_count = len(filtered_anomalies_df)
 
     if "closure_type" in shift_df.columns and total_logs > 0:
         dismissed_count = len(shift_df[shift_df["closure_type"] == "dismissed"])
@@ -311,19 +317,33 @@ def main() -> None:
                 analyst_logs = scored_df[scored_df["analyst_id"] == aid]
             if analyst_logs.empty:
                 continue
-            latest = analyst_logs.sort_values("closure_timestamp").iloc[-1]
-            base   = baselines.get(aid, {})
-            score  = float(latest["afi_score"])
-            state  = _afi_state(score)
-            ts_str = pd.to_datetime(latest["closure_timestamp"]).strftime("%H:%M")
 
-            signals = {
-                "triage_interval":        latest["triage_interval"],
-                "enrichment_depth":       latest["enrichment_depth"],
-                "uninvestigated_closures":latest["uninvestigated_closures"],
-                "escalation_deviations":  latest["escalation_deviations"],
-                "hourly_closure_rate":    latest["hourly_closure_rate"],
-            }
+            base = baselines.get(aid, {})
+
+            if shift_filter == "Active 8-Hour Operational Shift":
+                latest = analyst_logs.sort_values("closure_timestamp").iloc[-1]
+                score = float(latest["afi_score"])
+                state = _afi_state(score)
+                ts_str = pd.to_datetime(latest["closure_timestamp"]).strftime("%H:%M")
+                signals = {
+                    "triage_interval":        float(latest["triage_interval"]),
+                    "enrichment_depth":       float(latest["enrichment_depth"]),
+                    "uninvestigated_closures":float(latest["uninvestigated_closures"]),
+                    "escalation_deviations":  float(latest["escalation_deviations"]),
+                    "hourly_closure_rate":    float(latest["hourly_closure_rate"]),
+                }
+            else:
+                score = float(analyst_logs["afi_score"].mean())
+                state = _afi_state(score)
+                ts_str = f"Avg ({shift_filter[:7]})"
+                signals = {
+                    "triage_interval":        float(analyst_logs["triage_interval"].mean()),
+                    "enrichment_depth":       float(analyst_logs["enrichment_depth"].mean()),
+                    "uninvestigated_closures":float(analyst_logs["uninvestigated_closures"].mean()),
+                    "escalation_deviations":  float(analyst_logs["escalation_deviations"].mean()),
+                    "hourly_closure_rate":    float(analyst_logs["hourly_closure_rate"].mean()),
+                }
+
             with card_cols[i % 3]:
                 render_analyst_card(
                     analyst_id=aid,
@@ -340,15 +360,13 @@ def main() -> None:
             focus_logs = scored_df[scored_df["analyst_id"] == focus_analyst]
         if not focus_logs.empty:
             focus_latest = focus_logs.sort_values("closure_timestamp").iloc[-1]
-            focus_score  = float(focus_latest["afi_score"])
+            focus_score  = float(focus_logs["afi_score"].mean()) if shift_filter != "Active 8-Hour Operational Shift" else float(focus_latest["afi_score"])
             focus_pred   = int(focus_latest.get("risk_pred", 0))
 
             focus_anom_records: list = []
-            if not anomalies_df.empty:
-                fa = anomalies_df[anomalies_df["Analyst"] == focus_analyst].copy()
+            if not filtered_anomalies_df.empty:
+                fa = filtered_anomalies_df[filtered_anomalies_df["Analyst"] == focus_analyst].copy()
                 if not fa.empty:
-                    fa["closure_dt"] = pd.to_datetime(fa["Timestamp"])
-                    fa = fa[fa["closure_dt"] >= shift_start]
                     focus_anom_records = fa.to_dict("records")
 
             recs = get_advisory_recommendations(
@@ -370,14 +388,14 @@ def main() -> None:
         analyst_id=focus_analyst,
         scored_df=shift_df if not shift_df.empty else scored_df,
         baseline=baselines.get(focus_analyst, {}),
-        anomalies_df=anomalies_df,
+        anomalies_df=filtered_anomalies_df,
     )
 
     # ══════════════════════════════════════════════════════════
     # SECTION 3 — Degradation Anomaly Audit Log
     # ══════════════════════════════════════════════════════════
     st.markdown('<span class="section-label">Decision Degradation Audit Log &ensp;|&ensp; Mann–Whitney U Test</span>', unsafe_allow_html=True)
-    render_anomaly_log(anomalies_df)
+    render_anomaly_log(filtered_anomalies_df)
 
     # ══════════════════════════════════════════════════════════
     # SECTION 4 — Predictive Fatigue Risk Forecast
