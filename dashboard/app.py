@@ -135,12 +135,7 @@ def main() -> None:
         st.markdown("- **Parser Latency:** `1.2 ms`")
         st.markdown("- **Log Collectors:** `5 / 5 Online`")
         st.markdown("- **Schema Format:** `OCSF 1.1.0`")
-        st.markdown("---")
-        st.markdown("**Primary Literature Base**")
-        st.markdown("- [USENIX Security 2022](https://www.usenix.org/conference/usenixsecurity22/presentation/alahmadi)")
-        st.markdown("- [SANS SOC Survey 2024](https://www.sans.org/white-papers/sans-2024-soc-survey-facing-top-challenges-security-operations)")
-        st.markdown("- [SOUPS 2015 (Burnout Model)](https://www.usenix.org/conference/soups2015/proceedings/presentation/sundaramurthy)")
-        st.markdown("- [ACM CCS 2019 (Workflows)](https://dl.acm.org/doi/10.1145/3319535.3354239)")
+
 
     # ── Header Bar ────────────────────────────────────────────
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
