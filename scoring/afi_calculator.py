@@ -1,9 +1,10 @@
 """Analyst Fatigue Index (AFI) calculator for the Alert Fatigue Quantifier.
 
-Applies z-score normalization, sigmoid scaling, and literature-derived weights
-to combine rolling signals into the final composite AFI (0-100).
+Applies z-score normalization, sigmoid scaling, Circadian Rhythm Time-of-Day Multiplier (1.20x),
+and literature-derived weights to combine rolling signals into the final composite AFI (0-100).
 """
 
+from __future__ import annotations
 import numpy as np
 import pandas as pd
 from config.settings import (
@@ -13,17 +14,17 @@ from config.settings import (
     WEIGHT_TRIAGE_INTERVAL,
     WEIGHT_UNINVESTIGATED_CLOSURES,
 )
-from scoring.normaliser import apply_sigmoid, normalise_zscore
 
 
 def calculate_analyst_afi(df: pd.DataFrame, baselines: dict) -> pd.DataFrame:
     """Calculates the composite Analyst Fatigue Index (AFI) for each record.
 
-    Vectorizes z-score normalization and sigmoid scaling across the signal columns,
-    applies the weights from config/settings.py, and scales to range [0, 100].
+    Vectorizes z-score normalization and sigmoid scaling across signal columns,
+    applies time-of-day circadian rhythm multiplier (1.20x during 02:00-06:00 UTC),
+    and scales to range [0, 100].
 
     Args:
-        df: DataFrame containing the 5 computed rolling signals per row.
+        df: DataFrame containing computed rolling signals per row.
         baselines: Dictionary of baseline parameters keyed by analyst_id.
 
     Returns:
@@ -33,6 +34,7 @@ def calculate_analyst_afi(df: pd.DataFrame, baselines: dict) -> pd.DataFrame:
 
     # Pre-allocate array for calculated score
     afi_scores = np.zeros(len(res))
+    closure_dts = pd.to_datetime(res["closure_timestamp"])
 
     # Vectorized computation grouped by analyst to map correct baselines
     for analyst_id, baseline in baselines.items():
@@ -53,12 +55,8 @@ def calculate_analyst_afi(df: pd.DataFrame, baselines: dict) -> pd.DataFrame:
         z_uninvest = (res.loc[mask, "uninvestigated_closures"] - uninvest_mean) / uninvest_std
         z_enrich = (enrich_mean - res.loc[mask, "enrichment_depth"]) / enrich_std  # Negated z-score
         
-        # Escalation deviations & Hourly closure rate are already rate deviations.
-        # We compute their z-scores assuming normal baseline is centered at 0 with standard deviations.
-        # However, to be mathematically consistent, we normalize them against 0 baseline parameter means.
-        # For simplicity and correctness, we z-score normalize them:
-        z_escalation = res.loc[mask, "escalation_deviations"] / 0.15  # Scale by expected deviation
-        z_closures = (res.loc[mask, "hourly_closure_rate"] - 1.0) / 0.5  # Scale relative to nominal 1.0 ratio
+        z_escalation = res.loc[mask, "escalation_deviations"] / 0.15
+        z_closures = (res.loc[mask, "hourly_closure_rate"] - 1.0) / 0.5
 
         # 2. Apply Sigmoid Scaling
         s_triage = 1.0 / (1.0 + np.exp(-z_triage))
@@ -76,7 +74,14 @@ def calculate_analyst_afi(df: pd.DataFrame, baselines: dict) -> pd.DataFrame:
             WEIGHT_HOURLY_CLOSURE_RATE * s_closures
         )
 
-        afi_scores[mask] = raw_afi * 100.0
+        # 4. Circadian Rhythm Time-of-Day Multiplier (Al-Mhiqani et al. IEEE Cyber Ops)
+        # Night shift (02:00 UTC to 06:00 UTC) applies a 1.20x multiplier due to physiological vigilance drop
+        hours = closure_dts.loc[mask].dt.hour
+        night_mask = (hours >= 2) & (hours <= 6)
+        circadian_multiplier = np.where(night_mask, 1.20, 1.0)
+
+        adjusted_afi = raw_afi * 100.0 * circadian_multiplier
+        afi_scores[mask] = np.clip(adjusted_afi, 0.0, 100.0)
 
     res["afi_score"] = afi_scores
     return res

@@ -25,6 +25,8 @@ from signals.uninvestigated_closures import calculate_uninvestigated_closures
 from signals.enrichment_depth import calculate_enrichment_depth
 from signals.escalation_deviations import calculate_escalation_deviations
 from signals.hourly_closure_rate import calculate_hourly_closure_rate
+from signals.automation_bias import calculate_automation_bias
+from signals.context_switching import calculate_context_switching
 from degradation.detector import detect_degradation_anomalies
 from prediction.feature_engineering import build_feature_matrix
 from prediction.model import train_predictive_model, save_model
@@ -70,6 +72,8 @@ def main() -> None:
     enrich_depth = calculate_enrichment_depth(df)
     escalation_dev = calculate_escalation_deviations(df)
     hourly_rate = calculate_hourly_closure_rate(df)
+    abi_signal = calculate_automation_bias(df)
+    context_switches = calculate_context_switching(df)
 
     siem_prov_col = df["siem_provider"] if "siem_provider" in df.columns else "All Log Sources (OCSF Stream)"
     closure_type_col = df["closure_type"] if "closure_type" in df.columns else "investigated"
@@ -83,7 +87,9 @@ def main() -> None:
         "uninvestigated_closures": uninvest_cls,
         "enrichment_depth": enrich_depth,
         "escalation_deviations": escalation_dev,
-        "hourly_closure_rate": hourly_rate
+        "hourly_closure_rate": hourly_rate,
+        "automation_bias_index": abi_signal,
+        "context_switch_count": context_switches
     }, index=df.index)
 
     # 5. Compute Analyst Fatigue Index (AFI)

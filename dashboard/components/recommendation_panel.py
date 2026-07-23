@@ -1,11 +1,13 @@
 """Recommendation Panel component.
 
 Renders advisory suggestions sidebar panel, showing recommended mitigations,
-warning triggers, and persistent safety disclaimer. Zero emojis.
+warning triggers, SOAR JSON Webhook payload, and persistent safety disclaimer. Zero emojis.
 """
 
 from __future__ import annotations
+import json
 import streamlit as st
+from recommendations.engine import generate_soar_webhook_payload
 
 
 def _clean_html(raw_html: str) -> str:
@@ -18,7 +20,7 @@ def render_recommendation_panel(
     afi_score: float,
     recommendations: dict
 ) -> None:
-    """Renders the advisory recommendations panel."""
+    """Renders the advisory recommendations panel and SOAR JSON webhook."""
     state = recommendations.get("state", "NOMINAL")
     primary_rec = recommendations.get("primary_recommendation", "")
     actions = recommendations.get("actions", [])
@@ -31,7 +33,7 @@ def render_recommendation_panel(
         "HIGH": "#ef4444",
         "CRITICAL": "#dc2626"
     }
-    state_color = color_map.get(state, "#f8fafc")
+    state_color = color_map.get(state, "#f9fafb")
     badge_cls = f"badge-{state.lower()}"
 
     actions_html = ""
@@ -61,7 +63,7 @@ def render_recommendation_panel(
 
     panel_html = _clean_html(f"""
     <div class="recommendation-container">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid #334155;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid #1f2937;">
         <span style="font-weight:600; font-size:15px; color:var(--text-primary);">{analyst_id}</span>
         <span class="badge {badge_cls}">AFI {afi_score:.0f}</span>
       </div>
@@ -80,10 +82,18 @@ def render_recommendation_panel(
       </div>
       {warnings_html}
 
-      <div style="font-size:11px; color:var(--text-muted); border-top:1px solid #334155; padding-top:12px; margin-top:16px; line-height:1.4;">
+      <div style="font-size:11px; color:var(--text-muted); border-top:1px solid #1f2937; padding-top:12px; margin-top:16px; line-height:1.4;">
         {disclaimer}
       </div>
     </div>
     """)
 
     st.markdown(panel_html, unsafe_allow_html=True)
+
+    # ── SOAR Automated Queue Rebalancing JSON Webhook Box ──────
+    pred_flag = 1 if (state in ["HIGH", "CRITICAL"]) else 0
+    webhook_payload = generate_soar_webhook_payload(analyst_id, afi_score, pred_flag)
+
+    with st.expander("🤖 SOAR Automated Queue Rebalancing Webhook (IEEE THMS 23)", expanded=False):
+        st.caption("Cortex XSOAR / Splunk SOAR OCSF 1.1.0 Export Payload")
+        st.json(webhook_payload)

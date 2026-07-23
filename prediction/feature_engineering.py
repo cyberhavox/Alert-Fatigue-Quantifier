@@ -56,6 +56,8 @@ def build_feature_matrix(
         "enrichment_depth",
         "escalation_deviations",
         "hourly_closure_rate",
+        "automation_bias_index",
+        "context_switch_count",
         "hour_of_day",
         "afi_lag_1",
         "afi_lag_2"

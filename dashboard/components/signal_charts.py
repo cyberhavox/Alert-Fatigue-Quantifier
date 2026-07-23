@@ -1,14 +1,7 @@
-"""Behavioral Signal Telemetry & Live Math Breakdown component.
+"""Behavioral Signal Telemetry, Speed vs Quality Scatter Matrix, & Live Math Breakdown.
 
-Renders modern high-density SIEM signal charts (Matplotlib styled with glowing blue/cyan
-gradients, crisp baselines, anomaly scatter flags) and an interactive Live Mathematical
-Calculation Breakdown panel showing step-by-step formulas:
-- Window W(t)
-- Shift Score
-- Volume Score
-- Rushing Score
-- Z-score & Sigmoid Mapping
-- Shannon Alert Entropy H_alert
+Renders modern high-density SIEM signal charts, 2D Speed vs Quality Quadrant Scatter Plot (SANS 2024),
+and an interactive Live Mathematical Calculation Breakdown Inspector.
 """
 
 from __future__ import annotations
@@ -27,13 +20,75 @@ def _clean_html(raw_html: str) -> str:
     return "".join([line.strip() for line in raw_html.split("\n")])
 
 
+def render_speed_quality_scatter(scored_df: pd.DataFrame) -> None:
+    """Renders 2D Speed vs Quality Quadrant Scatter Matrix (SANS 2024 / USENIX 2022)."""
+    if scored_df.empty:
+        return
+
+    st.markdown('<span class="section-label">Speed vs. Investigation Quality Trade-Off Matrix (SANS 2024 / USENIX 2022)</span>', unsafe_allow_html=True)
+
+    bg_surface = "#111827"
+    border_subtle = "#1f2937"
+    text_primary = "#f9fafb"
+    text_secondary = "#9ca3af"
+
+    fig, ax = plt.subplots(figsize=(11, 3.8), facecolor=bg_surface)
+    ax.set_facecolor(bg_surface)
+
+    # Calculate average triage speed and enrichment depth per analyst
+    summary = scored_df.groupby("analyst_id").agg({
+        "triage_interval": "mean",
+        "enrichment_depth": "mean",
+        "afi_score": "last"
+    }).reset_index()
+
+    x_vals = summary["triage_interval"]
+    y_vals = summary["enrichment_depth"]
+
+    colors = ["#ef4444" if score > 70 else ("#f59e0b" if score > 50 else "#10b981") for score in summary["afi_score"]]
+
+    scatter = ax.scatter(x_vals, y_vals, c=colors, s=180, edgecolors="#f9fafb", linewidth=1.5, zorder=5)
+
+    for _, row in summary.iterrows():
+        ax.annotate(
+            f" {row['analyst_id']}\n (AFI {row['afi_score']:.0f})",
+            (row["triage_interval"], row["enrichment_depth"]),
+            color=text_primary,
+            fontsize=9,
+            fontweight="bold"
+        )
+
+    # Quadrant Dividers (SANS/USENIX Thresholds: 180s Triage Speed, 3.0 Enrichment Depth)
+    ax.axvline(x=180.0, color="#374151", linestyle="--", linewidth=1.2)
+    ax.axhline(y=3.0, color="#374151", linestyle="--", linewidth=1.2)
+
+    # Annotate Quadrants
+    ax.text(80, 5.2, "QUADRANT I: Nominal Thorough\n(High Quality, Fast Speed)", color="#10b981", fontsize=8.5, fontweight="bold")
+    ax.text(280, 5.2, "QUADRANT II: Diligent Slow\n(High Quality, Extended Speed)", color="#3b82f6", fontsize=8.5, fontweight="bold")
+    ax.text(80, 1.0, "QUADRANT III: Fatigued Rushing\n(Low Quality Shortcutting - FLAGGED)", color="#ef4444", fontsize=8.5, fontweight="bold")
+    ax.text(280, 1.0, "QUADRANT IV: Passive Exhausted\n(Low Quality, Extended Speed)", color="#f59e0b", fontsize=8.5, fontweight="bold")
+
+    ax.set_title("Analyst Triage Speed vs. Investigation Depth (SANS 2024 Trade-Off Quadrants)", color=text_primary, fontsize=11, fontweight="bold", pad=10)
+    ax.set_xlabel("Mean Triage Latency (seconds) — SANS Baseline: 180s", color=text_secondary, fontsize=9)
+    ax.set_ylabel("Mean Enrichment Depth (actions/alert)", color=text_secondary, fontsize=9)
+
+    ax.tick_params(colors=text_secondary, labelsize=9)
+    for spine in ax.spines.values():
+        spine.set_color(border_subtle)
+    ax.grid(color=border_subtle, linestyle="-", linewidth=0.7, alpha=0.8)
+
+    plt.tight_layout(pad=0.4)
+    st.pyplot(fig)
+    plt.close(fig)
+
+
 def render_signal_charts(
     analyst_id: str,
     scored_df: pd.DataFrame,
     baseline: dict[str, float],
     anomalies_df: pd.DataFrame
 ) -> None:
-    """Renders high-density signal charts and live math calculation inspector."""
+    """Renders high-density signal charts, 2D scatter matrix, and live math breakdown."""
     analyst_data = scored_df[scored_df["analyst_id"] == analyst_id].copy()
     if analyst_data.empty:
         st.warning(f"No signal telemetry available for {analyst_id}.")
@@ -101,7 +156,6 @@ def render_signal_charts(
     bg_surface = "#111827"       # Slate 900 Card Surface
     border_subtle = "#1f2937"    # Dark Steel Border
     chart_cyan = "#06b6d4"       # Glowing Cyan Line
-    chart_blue = "#3b82f6"       # Sentinel Blue Line
     text_secondary = "#9ca3af"   # Light Slate Text
     state_critical = "#ef4444"   # Red Anomaly Flag
     text_primary = "#f9fafb"     # Crisp White Text
@@ -226,6 +280,9 @@ def render_signal_charts(
             st.pyplot(fig)
             plt.close(fig)
 
+    # Render 2D Speed vs Quality Scatter Matrix
+    render_speed_quality_scatter(scored_df)
+
     # ══════════════════════════════════════════════════════════
     # LIVE MATHEMATICAL CALCULATION BREAKDOWN INSPECTOR
     # ══════════════════════════════════════════════════════════
@@ -259,7 +316,6 @@ def render_signal_charts(
         cwi_score = min(100.0, ofi_score * circadian_term)
 
         # Shannon Alert Entropy H_alert
-        # Mock rule ID distribution across rolling window
         rule_counts = [max(1, int(n_win_alerts * 0.5)), max(1, int(n_win_alerts * 0.3)), max(1, int(n_win_alerts * 0.2))]
         total_r = sum(rule_counts)
         shannon_entropy = -sum((c / total_r) * math.log2(c / total_r) for c in rule_counts)

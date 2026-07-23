@@ -164,6 +164,14 @@ def generate_analyst_logs(
             notes_len = int(random.normalvariate(notes_mean, NOTES_LEN_STD_NOMINAL))
         notes_len = max(0, min(1000, notes_len))
 
+        # AI Recommendation acceptance and Tool Context Switch Count
+        if is_fatigued:
+            ai_accepted = 1 if random.random() < 0.75 else 0
+            context_switch_count = random.randint(5, 12)
+        else:
+            ai_accepted = 1 if random.random() < 0.20 else 0
+            context_switch_count = random.randint(1, 4)
+
         # Generate notes text based on length
         notes_text = generate_notes(notes_len)
 
@@ -178,6 +186,8 @@ def generate_analyst_logs(
             "severity_verified": severity_verified,
             "enrichment_actions": enrichment_actions,
             "escalation_flag": escalation_flag,
+            "ai_accepted": ai_accepted,
+            "context_switch_count": context_switch_count,
             "notes": notes_text
         })
         alert_counter += 1
