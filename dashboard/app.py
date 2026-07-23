@@ -49,10 +49,15 @@ def _clean_html(raw_html: str) -> str:
 
 @st.cache_resource
 def _bootstrap_pipeline() -> bool:
-    """Runs data generator and pipeline once if missing."""
+    """Runs data generator and pipeline once if missing or outdated."""
     scored_path = os.path.join(WORKSPACE_ROOT, "data", "output", "scored_alerts.csv")
     if os.path.exists(scored_path):
-        return True
+        try:
+            check_df = pd.read_csv(scored_path, nrows=5)
+            if "automation_bias_index" in check_df.columns and "closure_type" in check_df.columns:
+                return True
+        except Exception:
+            pass
 
     scripts = [
         [sys.executable, os.path.join(WORKSPACE_ROOT, "scripts", "generate_synthetic_data.py")],
