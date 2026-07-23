@@ -354,10 +354,17 @@ def render_signal_charts(
         circadian_term = 1.0 + 0.15 * (1.0 / (1.0 + math.exp(-((hours_into_shift - 6.0) / 1.5))))
         cwi_score = min(100.0, ofi_score * circadian_term)
 
-        # Shannon Alert Entropy H_alert
-        rule_counts = [max(1, int(n_win_alerts * 0.5)), max(1, int(n_win_alerts * 0.3)), max(1, int(n_win_alerts * 0.2))]
-        total_r = sum(rule_counts)
-        shannon_entropy = -sum((c / total_r) * math.log2(c / total_r) for c in rule_counts)
+        # Shannon Alert / Contextual Entropy H_alert
+        if "mitre_tactic" in win_logs.columns and not win_logs["mitre_tactic"].empty:
+            tactic_counts = win_logs["mitre_tactic"].value_counts().values
+            total_r = sum(tactic_counts)
+            shannon_entropy = -sum((c / total_r) * math.log2(c / total_r) for c in tactic_counts if c > 0)
+        elif "contextual_entropy" in latest_row:
+            shannon_entropy = float(latest_row["contextual_entropy"])
+        else:
+            rule_counts = [max(1, int(n_win_alerts * 0.5)), max(1, int(n_win_alerts * 0.3)), max(1, int(n_win_alerts * 0.2))]
+            total_r = sum(rule_counts)
+            shannon_entropy = -sum((c / total_r) * math.log2(c / total_r) for c in rule_counts)
 
         # Live AFI Composite Score
         live_afi = float(latest_row["afi_score"])

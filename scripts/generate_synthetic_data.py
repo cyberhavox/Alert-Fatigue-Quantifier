@@ -89,47 +89,50 @@ def generate_analyst_logs(
     records = []
     current_time = start_date
 
+    # Analyst-specific profile adjustments for realistic heterogeneous telemetry
+    profile_bias = {
+        "ANALYST_01": {"triage_mult": 0.8, "enrich_mult": 1.4, "fp_mult": 0.7, "switch_min": 1, "switch_max": 3, "ai_rate": 0.10},
+        "ANALYST_02": {"triage_mult": 2.4, "enrich_mult": 0.3, "fp_mult": 1.6, "switch_min": 7, "switch_max": 12, "ai_rate": 0.85},
+        "ANALYST_03": {"triage_mult": 1.1, "enrich_mult": 1.1, "fp_mult": 0.9, "switch_min": 2, "switch_max": 5, "ai_rate": 0.30},
+        "ANALYST_04": {"triage_mult": 0.6, "enrich_mult": 0.7, "fp_mult": 1.2, "switch_min": 3, "switch_max": 6, "ai_rate": 0.45},
+        "ANALYST_05": {"triage_mult": 2.1, "enrich_mult": 0.4, "fp_mult": 1.5, "switch_min": 6, "switch_max": 10, "ai_rate": 0.75},
+    }
+    prof = profile_bias.get(analyst_id, {"triage_mult": 1.0, "enrich_mult": 1.0, "fp_mult": 1.0, "switch_min": 2, "switch_max": 5, "ai_rate": 0.3})
+
     # Load distribution configurations from settings
     lam = LAMBDA_FATIGUE if is_fatigued else LAMBDA_NOMINAL
-    fp_rate = FP_RATE_FATIGUE if is_fatigued else FP_RATE_NOMINAL
-    enrich_k = ENRICHMENT_K_FATIGUE if is_fatigued else ENRICHMENT_K_NOMINAL
+    fp_rate = min(0.95, (FP_RATE_FATIGUE if is_fatigued else FP_RATE_NOMINAL) * prof["fp_mult"])
+    enrich_k = max(1.0, (ENRICHMENT_K_FATIGUE if is_fatigued else ENRICHMENT_K_NOMINAL) * prof["enrich_mult"])
     enrich_theta = ENRICHMENT_THETA_FATIGUE if is_fatigued else ENRICHMENT_THETA_NOMINAL
-    triage_mean = TRIAGE_MEAN_FATIGUE if is_fatigued else TRIAGE_MEAN_NOMINAL
+    triage_mean = max(60.0, (TRIAGE_MEAN_FATIGUE if is_fatigued else TRIAGE_MEAN_NOMINAL) * prof["triage_mult"])
     triage_std = TRIAGE_STD_FATIGUE if is_fatigued else TRIAGE_STD_NOMINAL
     notes_mean = NOTES_LEN_MEAN_FATIGUE if is_fatigued else NOTES_LEN_MEAN_NOMINAL
 
     alert_counter = 1
 
     while current_time < end_date:
-        # Time to next alert assignment follows an Exponential distribution (Poisson process)
         hours_to_next = random.expovariate(lam)
         current_time += timedelta(hours=hours_to_next)
 
         if current_time >= end_date:
             break
 
-        # Generate alert details
         alert_id = f"ALERT_{random.randint(100000, 999999)}"
         triage_ts = current_time
 
-        # Triage interval follows a Log-Normal distribution
-        # Log-normal parameters calculation from mean and std
         sigma_log = np.sqrt(np.log(1 + (triage_std**2 / triage_mean**2)))
         mu_log = np.log(triage_mean) - (sigma_log**2 / 2)
         triage_seconds = int(random.lognormvariate(mu_log, sigma_log))
         closure_ts = triage_ts + timedelta(seconds=triage_seconds)
 
-        # Assign initial severity
         severity_assigned = random.choice(["low", "medium", "high", "critical"])
 
-        # Determine closure type and escalation
         rand_val = random.random()
         if is_fatigued:
-            # Shortcutting: high false positive rate, low escalation rate
             if rand_val < fp_rate:
                 closure_type = "dismissed"
                 escalation_flag = False
-                severity_verified = severity_assigned  # Accept default without validation
+                severity_verified = severity_assigned
             elif rand_val < 0.99:
                 closure_type = "investigated"
                 escalation_flag = False
@@ -139,7 +142,6 @@ def generate_analyst_logs(
                 escalation_flag = True
                 severity_verified = "high"
         else:
-            # Nominal: typical triage investigation distributions
             if rand_val < fp_rate:
                 closure_type = "dismissed"
                 escalation_flag = False
@@ -153,24 +155,18 @@ def generate_analyst_logs(
                 escalation_flag = True
                 severity_verified = "high"
 
-        # Enrichment actions follow a Gamma distribution
         enrichment_actions = int(np.random.gamma(enrich_k, enrich_theta))
         enrichment_actions = max(0, min(50, enrichment_actions))
 
-        # Notes length follows Normal distribution, bounded below at 0
         if is_fatigued:
             notes_len = int(random.normalvariate(notes_mean, 5.0))
         else:
             notes_len = int(random.normalvariate(notes_mean, NOTES_LEN_STD_NOMINAL))
         notes_len = max(0, min(1000, notes_len))
 
-        # AI Recommendation acceptance and Tool Context Switch Count
-        if is_fatigued:
-            ai_accepted = 1 if random.random() < 0.75 else 0
-            context_switch_count = random.randint(5, 12)
-        else:
-            ai_accepted = 1 if random.random() < 0.20 else 0
-            context_switch_count = random.randint(1, 4)
+        # AI Recommendation acceptance and Tool Context Switch Count driven by analyst profile
+        ai_accepted = 1 if random.random() < prof["ai_rate"] else 0
+        context_switch_count = random.randint(prof["switch_min"], prof["switch_max"])
 
         # Generate notes text based on length
         notes_text = generate_notes(notes_len)

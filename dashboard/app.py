@@ -376,6 +376,9 @@ def main() -> None:
                 if not fa.empty:
                     focus_anom_records = fa.to_dict("records")
 
+            focus_hep = float(focus_latest.get("hep_score", 2.5))
+            focus_risk_dollars = float(focus_latest.get("financial_risk_exposure", focus_score * 44.5))
+
             recs = get_advisory_recommendations(
                 afi_score=focus_score,
                 anomalies=focus_anom_records,
@@ -385,6 +388,8 @@ def main() -> None:
                 analyst_id=focus_analyst,
                 afi_score=focus_score,
                 recommendations=recs,
+                hep_score=focus_hep,
+                financial_risk_exposure=focus_risk_dollars,
             )
 
     # ══════════════════════════════════════════════════════════

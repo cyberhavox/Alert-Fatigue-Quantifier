@@ -21,7 +21,9 @@ def _clean_html(raw_html: str) -> str:
 def render_recommendation_panel(
     analyst_id: str,
     afi_score: float,
-    recommendations: dict
+    recommendations: dict,
+    hep_score: float | None = None,
+    financial_risk_exposure: float | None = None
 ) -> None:
     """Renders the advisory recommendations panel, Adaptive Autonomy Level, and SOAR Webhook."""
     state = recommendations.get("state", "NOMINAL")
@@ -30,11 +32,11 @@ def render_recommendation_panel(
     warnings = recommendations.get("warnings", [])
     autonomy_title = recommendations.get("autonomy_level_title", "Level 0: Manual Operator Triage")
     autonomy_desc = recommendations.get("autonomy_level_desc", "Human-in-the-Loop")
-    hep_pct = recommendations.get("therp_hep_percentage", calculate_therp_hep(afi_score))
     disclaimer = recommendations.get("disclaimer", "All recommendations are advisory. Operational decisions rest with SOC management.")
 
-    # Calculate financial risk exposure ($)
-    bri_score, risk_dollars = calculate_burnout_risk_index(afi_score, 180.0, 180.0, 4.0, 0.1)
+    # Read live dynamic THERP HEP and Financial Risk Exposure
+    hep_pct = hep_score if hep_score is not None else recommendations.get("therp_hep_percentage", calculate_therp_hep(afi_score))
+    risk_dollars = financial_risk_exposure if financial_risk_exposure is not None else (afi_score * 44.5)
 
     color_map = {
         "NOMINAL": "#10b981",
